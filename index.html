@@ -244,7 +244,15 @@
                     <input id="filtreNum" placeholder="Cercar per número...">
                     <select id="filtrePoble"></select>
                     <select id="filtreXarxa"></select>
+                    <select id="filtreVelocitat">
+                        <option value="">Totes les velocitats</option>
+                        <option>100/100 Mbps</option>
+                        <option>300/300 Mbps</option>
+                        <option>600/600 Mbps</option>
+                        <option>1000/1000 Mbps</option>
+                    </select>
                 </div>
+                <p style="font-size: 0.75rem; color: var(--text-muted); margin: 0 0 0.5rem 0.5rem;">Filtrar per serveis exactes:</p>
                 <div class="checkbox-group">
                     <label class="checkbox-label"><input type="checkbox" class="filtreContracte" value="Fibra">Fibra</label>
                     <label class="checkbox-label"><input type="checkbox" class="filtreContracte" value="IP">IP</label>
@@ -313,7 +321,7 @@ const db = getFirestore(app);
 const PASSWORD = "FOC6pu6A";
 
 let clients = [];
-let filtratsActuals = []; // Per exportar només el que es veu
+let filtratsActuals = [];
 let indexActual = null;
 
 const poblacions = ["Centelles","Tona","Vic","Granollers","Taradell","Aiguafreda","Sant Martí de Centelles","La Garriga","Hostalets de Balenyà","Seva","Sant Hipòtil de Voltregà","Rubí","Santa Perpetua de Moguda","Santa Maria d'Oló","Avinyó","Sant Julià de Vilatorta","Folgueroles"];
@@ -356,7 +364,8 @@ function initSelects(){
 }
 
 function initFilters(){
-    [filtreNom, filtreNum, filtrePoble, filtreXarxa].forEach(el => el.addEventListener("input", renderList));
+    const ids = ["filtreNom", "filtreNum", "filtrePoble", "filtreXarxa", "filtreVelocitat"];
+    ids.forEach(id => document.getElementById(id).addEventListener("input", renderList));
     document.querySelectorAll(".filtreContracte").forEach(el => el.addEventListener("change", renderList));
 }
 
@@ -369,15 +378,33 @@ function loadClients(){
 }
 
 function renderList(){
-    const nomF=filtreNom.value.toLowerCase(), numF=filtreNum.value, pobleF=filtrePoble.value, xarxaF=filtreXarxa.value;
-    const contractesF=[...document.querySelectorAll(".filtreContracte:checked")].map(c=>c.value);
+    const nomF = document.getElementById("filtreNom").value.toLowerCase();
+    const numF = document.getElementById("filtreNum").value;
+    const pobleF = document.getElementById("filtrePoble").value;
+    const xarxaF = document.getElementById("filtreXarxa").value;
+    const velocitatF = document.getElementById("filtreVelocitat").value;
+    
+    // Obtenim els serveis seleccionats als filtres (ordenats per comparar)
+    const contractesF = [...document.querySelectorAll(".filtreContracte:checked")]
+                        .map(c=>c.value)
+                        .sort();
 
     filtratsActuals = clients.filter(c => {
         if(nomF && !c.nom?.toLowerCase().includes(nomF)) return false;
         if(numF && !c.numClient?.includes(numF)) return false;
         if(pobleF && c.poble!==pobleF) return false;
         if(xarxaF && c.xarxaExterna!==xarxaF) return false;
-        if(contractesF.length>0 && !contractesF.every(v=>c.contracte?.includes(v))) return false;
+        if(velocitatF && c.velocitatFibra!==velocitatF) return false;
+        
+        // LÒGICA DE FILTRATGE EXACTE DE SERVEIS
+        if(contractesF.length > 0) {
+            const serveisClient = (c.contracte || []).slice().sort();
+            // Comparem si tenen la mateixa longitud i els mateixos elements exactes
+            const esIdentic = serveisClient.length === contractesF.length && 
+                             serveisClient.every((v, i) => v === contractesF[i]);
+            if(!esIdentic) return false;
+        }
+        
         return true;
     }).sort((a,b) => (a.nom > b.nom ? 1 : -1));
 
@@ -386,17 +413,14 @@ function renderList(){
     filtratsActuals.forEach(c => {
         const div = document.createElement("div");
         div.className = "client-item";
-        div.innerHTML = `<div><div class="client-info-main">${c.nom}</div><div class="client-info-sub"><span class="badge">${c.numClient || 'S/N'}</span> 📍 ${c.poble}</div></div><button class="btn-danger" onclick="event.stopPropagation(); eliminarClient('${c.id}', '${c.nom}')">🗑</button>`;
+        div.innerHTML = `<div><div class="client-info-main"><strong>${c.nom}</strong></div><div class="client-info-sub"><span class="badge">${c.numClient || 'S/N'}</span> 📍 ${c.poble} <span style="font-size:0.8rem; color:var(--text-muted);">(${c.velocitatFibra || 'Sense vel.'})</span></div></div><button class="btn-danger" onclick="event.stopPropagation(); eliminarClient('${c.id}', '${c.nom}')">🗑</button>`;
         div.onclick = () => carregarClient(c);
         listDiv.appendChild(div);
     });
 }
 
-// FUNCIÓ EXCEL
 window.exportarExcel = () => {
     if(filtratsActuals.length === 0) return alert("No hi ha dades per exportar.");
-    
-    // Preparem les dades netes per l'Excel
     const dadesExcel = filtratsActuals.map(c => ({
         "Nom": c.nom,
         "Nº Client": c.numClient || "",
@@ -405,12 +429,9 @@ window.exportarExcel = () => {
         "Velocitat": c.velocitatFibra || "",
         "Serveis": (c.contracte || []).join(", ")
     }));
-
     const worksheet = XLSX.utils.json_to_sheet(dadesExcel);
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, "Clients");
-    
-    // Generar fitxer amb data actual
     const dataRef = new Date().toISOString().slice(0,10);
     XLSX.writeFile(workbook, `Llistat_Clients_FOC_${dataRef}.xlsx`);
 };
@@ -424,10 +445,14 @@ window.nouClient=()=>{
 };
 
 window.guardarClient=async()=>{
-    if(!nom.value) return alert("El nom és obligatori");
+    const nomVal = document.getElementById("nom").value;
+    if(!nomVal) return alert("El nom és obligatori");
     const c = {
-        nom: nom.value, numClient: numClient.value, poble: poble.value,
-        xarxaExterna: xarxaExterna.value, velocitatFibra: velocitatFibra.value,
+        nom: nomVal,
+        numClient: document.getElementById("numClient").value,
+        poble: document.getElementById("poble").value,
+        xarxaExterna: document.getElementById("xarxaExterna").value,
+        velocitatFibra: document.getElementById("velocitatFibra").value,
         contracte: [...document.querySelectorAll(".contracteOpcio:checked")].map(cb=>cb.value)
     };
     try {
@@ -440,8 +465,11 @@ window.guardarClient=async()=>{
 window.carregarClient=c=>{
     indexActual=c.id;
     document.getElementById("formTitle").innerText = "Editant: " + c.nom;
-    nom.value=c.nom; numClient.value=c.numClient; poble.value=c.poble;
-    xarxaExterna.value=c.xarxaExterna; velocitatFibra.value=c.velocitatFibra;
+    document.getElementById("nom").value=c.nom;
+    document.getElementById("numClient").value=c.numClient;
+    document.getElementById("poble").value=c.poble;
+    document.getElementById("xarxaExterna").value=c.xarxaExterna;
+    document.getElementById("velocitatFibra").value=c.velocitatFibra;
     const serveis = c.contracte || [];
     document.querySelectorAll(".contracteOpcio").forEach(cb => cb.checked = serveis.includes(cb.value));
 };

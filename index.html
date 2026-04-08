@@ -61,6 +61,7 @@ button { padding: 8px; border-radius: 5px; border: none; cursor: pointer; }
 </div>
 
 <div id="clientList"></div>
+<div id="pagination"></div>
 </div>
 
 <div class="form">
@@ -108,20 +109,12 @@ const auth = getAuth(app);
 
 let clients = [];
 let indexActual = null;
+let paginaActual = 1;
+let perPagina = 10;
 
 const poblacions = ["Centelles","Tona","Vic","Granollers"];
 const xarxes = ["FOC","Adamo","Masmovil"];
 
-// DEBOUNCE
-function debounce(fn, delay=300){
-let timeout;
-return (...args)=>{
-clearTimeout(timeout);
-timeout=setTimeout(()=>fn(...args),delay);
-};
-}
-
-// AUTH
 onAuthStateChanged(auth, user => {
 if(user){
 loginDiv.classList.add("hidden");
@@ -165,12 +158,9 @@ fx.innerHTML+=`<option>${v}</option>`;
 }
 
 function initFilters(){
-const inputs=[filtreNom,filtreNum,filtrePoble,filtreXarxa,filtreVelocitat];
-inputs.forEach(el=>el.addEventListener("input",debouncedRender));
-document.querySelectorAll(".filtreContracte").forEach(el=>el.addEventListener("change",debouncedRender));
+[filtreNom,filtreNum,filtrePoble,filtreXarxa,filtreVelocitat].forEach(el=>el.addEventListener("input",renderList));
+document.querySelectorAll(".filtreContracte").forEach(el=>el.addEventListener("change",renderList));
 }
-
-const debouncedRender = debounce(renderList,300);
 
 function loadClients(){
 onSnapshot(collection(db,"clients"), snap=>{
@@ -198,8 +188,11 @@ if(contractesF.length>0 && !contractesF.some(v=>c.contracte?.includes(v))) retur
 return true;
 });
 
+const inici=(paginaActual-1)*perPagina;
+const pag=filtrats.slice(inici,inici+perPagina);
+
 clientList.innerHTML="";
-filtrats.forEach(c=>{
+pag.forEach(c=>{
 const div=document.createElement("div");
 div.className="client-item";
 div.innerHTML=`${c.nom} - ${c.poble}

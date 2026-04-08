@@ -1,124 +1,203 @@
 <!DOCTYPE html>
 <html lang="ca">
 <head>
-  <meta charset="UTF-8">
-  <title>Clients FOC</title>
-  <style>
-    body { font-family: Arial; background: #f4f4f4; margin: 20px; }
-    .container { max-width: 1000px; margin: auto; display: flex; gap: 20px; }
-    .list, .form { background: white; padding: 15px; border-radius: 10px; flex: 1; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
-    h2 { text-align: center; }
-    .client-item { padding: 8px; border-bottom: 1px solid #ddd; display: flex; justify-content: space-between; cursor: pointer;}
-    .client-item:hover { background: #eee; }
-    .field { margin: 10px 0; }
-    input, select { width: 100%; padding: 6px; border-radius: 5px; border: 1px solid #ccc; }
-    button { padding: 8px; border: none; border-radius: 5px; cursor: pointer; }
-    .btn-delete { background: #dc3545; color: white; }
-    .btn-save { background: #007BFF; color: white; width: 100%; }
-    .btn-new { background: #28a745; color: white; width: 100%; margin-bottom: 10px; }
-  </style>
+<meta charset="UTF-8">
+<title>Clients FOC</title>
+
+<style>
+body { font-family: Arial; background: #f4f4f4; margin: 20px; }
+.container { max-width: 1100px; margin: auto; display: flex; gap: 20px; }
+.list, .form { background: white; padding: 15px; border-radius: 10px; flex: 1; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+.client-item { padding: 8px; border-bottom: 1px solid #ddd; display: flex; justify-content: space-between; cursor: pointer;}
+.client-item:hover { background: #eee; }
+.field { margin: 10px 0; }
+input, select { width: 100%; padding: 6px; border-radius: 5px; }
+button { padding: 8px; border-radius: 5px; border: none; cursor: pointer; }
+.btn-delete { background: red; color: white; }
+.btn-save { background: blue; color: white; width: 100%; }
+.btn-new { background: green; color: white; width: 100%; }
+.checkbox-group { display: flex; flex-wrap: wrap; gap: 10px; }
+</style>
 </head>
+
 <body>
 
 <h2>Clients FOC</h2>
 
 <div class="container">
 
-  <div class="list">
-    <button class="btn-new" onclick="nouClient()">+ Nou Client</button>
-    <div id="clientList"></div>
-  </div>
+<div class="list">
+<button class="btn-new" onclick="nouClient()">+ Nou</button>
 
-  <div class="form">
-    <div class="field"><input id="nom" placeholder="Nom"></div>
-    <div class="field"><input id="numClient" placeholder="Nº client"></div>
-    <div class="field"><input id="poble" placeholder="Poble"></div>
-    <button class="btn-save" onclick="guardarClient()">Guardar</button>
-  </div>
+<input id="filtreNom" placeholder="Filtrar nom" oninput="renderList()">
+<input id="filtreNum" placeholder="Filtrar nº" oninput="renderList()">
+
+<select id="filtrePoble" onchange="renderList()"></select>
+<select id="filtreXarxa" onchange="renderList()"></select>
+
+<select id="filtreVelocitat" onchange="renderList()">
+<option value="">Totes</option>
+<option>100/100 Mbps</option>
+<option>300/300 Mbps</option>
+<option>600/600 Mbps</option>
+<option>1000/1000 Mbps</option>
+</select>
+
+<div class="checkbox-group">
+<label><input type="checkbox" class="filtreContracte" value="Fibra" onchange="renderList()">Fibra</label>
+<label><input type="checkbox" class="filtreContracte" value="IP" onchange="renderList()">IP</label>
+<label><input type="checkbox" class="filtreContracte" value="Mòbil" onchange="renderList()">Mòbil</label>
+<label><input type="checkbox" class="filtreContracte" value="Fix" onchange="renderList()">Fix</label>
+<label><input type="checkbox" class="filtreContracte" value="Wimax" onchange="renderList()">Wimax</label>
+</div>
+
+<div id="clientList"></div>
+<div id="pagination"></div>
+</div>
+
+<div class="form">
+<input id="nom" placeholder="Nom">
+<input id="numClient" placeholder="Número">
+
+<select id="poble"></select>
+<select id="xarxaExterna"></select>
+
+<select id="velocitatFibra">
+<option value="">Velocitat</option>
+<option>100/100 Mbps</option>
+<option>300/300 Mbps</option>
+<option>600/600 Mbps</option>
+<option>1000/1000 Mbps</option>
+</select>
+
+<div class="checkbox-group">
+<label><input type="checkbox" class="contracteOpcio" value="Fibra">Fibra</label>
+<label><input type="checkbox" class="contracteOpcio" value="IP">IP</label>
+<label><input type="checkbox" class="contracteOpcio" value="Mòbil">Mòbil</label>
+<label><input type="checkbox" class="contracteOpcio" value="Fix">Fix</label>
+<label><input type="checkbox" class="contracteOpcio" value="Wimax">Wimax</label>
+</div>
+
+<button class="btn-save" onclick="guardarClient()">Guardar</button>
+</div>
 
 </div>
 
-<!-- 🔥 FIREBASE -->
+<!-- FIREBASE -->
 <script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
-  import { getFirestore, collection, addDoc, onSnapshot, doc, deleteDoc, setDoc } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-firestore.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
+import { getFirestore, collection, addDoc, onSnapshot, doc, deleteDoc, setDoc } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-firestore.js";
 
-  const firebaseConfig = {
-    apiKey: "AIzaSyBuIZdfoUuTekmRLifaS8K4cR_QJKaHLCw",
-    authDomain: "focentellesclients.firebaseapp.com",
-    projectId: "focentellesclients",
-    storageBucket: "focentellesclients.firebasestorage.app",
-    messagingSenderId: "754969193561",
-    appId: "1:754969193561:web:6f66c5ff9e5cd824a89548"
-  };
+const firebaseConfig = {
+apiKey: "AIzaSyBu...",
+authDomain: "focentellesclients.firebaseapp.com",
+projectId: "focentellesclients",
+storageBucket: "focentellesclients.firebasestorage.app",
+messagingSenderId: "754969193561",
+appId: "1:754969193561:web:6f66c5ff9e5cd824a89548"
+};
 
-  const app = initializeApp(firebaseConfig);
-  const db = getFirestore(app);
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
 
-  let clients = [];
-  let indexActual = null;
+let clients = [];
+let indexActual = null;
+let paginaActual = 1;
+let perPagina = 10;
 
-  // 🔄 Temps real
-  onSnapshot(collection(db, "clients"), (snapshot) => {
-    clients = [];
-    snapshot.forEach((d) => {
-      clients.push({ id: d.id, ...d.data() });
-    });
-    renderList();
-  });
+const poblacions = ["Centelles","Tona","Vic","Granollers"];
+const xarxes = ["FOC","Adamo","Masmovil"];
 
-  function renderList(){
-    const list = document.getElementById("clientList");
-    list.innerHTML = "";
+function initSelects(){
+const p=document.getElementById("poble");
+const fp=document.getElementById("filtrePoble");
+const x=document.getElementById("xarxaExterna");
+const fx=document.getElementById("filtreXarxa");
 
-    clients.forEach((c,i)=>{
-      const div = document.createElement("div");
-      div.className="client-item";
-      div.innerHTML = `
-        <span>${c.nom} (${c.poble})</span>
-        <button onclick="eliminarClient(${i})">🗑</button>
-      `;
-      div.onclick = ()=>carregarClient(i);
-      list.appendChild(div);
-    });
-  }
+fp.innerHTML='<option value="">Tots pobles</option>';
+fx.innerHTML='<option value="">Totes</option>';
 
-  window.nouClient = function(){
-    indexActual=null;
-    nom.value="";
-    numClient.value="";
-    poble.value="";
-  }
+poblacions.forEach(v=>{
+p.innerHTML+=`<option>${v}</option>`;
+fp.innerHTML+=`<option>${v}</option>`;
+});
+xarxes.forEach(v=>{
+x.innerHTML+=`<option>${v}</option>`;
+fx.innerHTML+=`<option>${v}</option>`;
+});
+}
 
-  window.guardarClient = async function(){
-    const client = {
-      nom: nom.value,
-      numClient: numClient.value,
-      poble: poble.value
-    };
+onSnapshot(collection(db,"clients"), snap=>{
+clients=[];
+snap.forEach(d=>clients.push({id:d.id,...d.data()}));
+renderList();
+});
 
-    if(indexActual === null){
-      await addDoc(collection(db, "clients"), client);
-    } else {
-      await setDoc(doc(db, "clients", clients[indexActual].id), client);
-    }
+function renderList(){
+const nomF=filtreNom.value.toLowerCase();
+const numF=filtreNum.value;
 
-    nouClient();
-  }
+let filtrats=clients.filter(c=>{
+if(nomF && !c.nom.toLowerCase().includes(nomF)) return false;
+if(numF && !c.numClient.includes(numF)) return false;
+return true;
+});
 
-  window.carregarClient = function(i){
-    const c = clients[i];
-    indexActual = i;
-    nom.value = c.nom;
-    numClient.value = c.numClient;
-    poble.value = c.poble;
-  }
+const inici=(paginaActual-1)*perPagina;
+const pag=filtrats.slice(inici,inici+perPagina);
 
-  window.eliminarClient = async function(i){
-    if(confirm("Eliminar client?")){
-      await deleteDoc(doc(db, "clients", clients[i].id));
-    }
-  }
+clientList.innerHTML="";
+pag.forEach((c,i)=>{
+const div=document.createElement("div");
+div.className="client-item";
+div.innerHTML=`${c.nom} - ${c.poble}
+<button onclick="eliminarClient(${i})">🗑</button>`;
+div.onclick=()=>carregarClient(i);
+clientList.appendChild(div);
+});
+}
+
+window.nouClient=()=>{
+indexActual=null;
+nom.value="";
+numClient.value="";
+}
+
+window.guardarClient=async()=>{
+const contracte=[...document.querySelectorAll(".contracteOpcio:checked")].map(c=>c.value);
+
+const c={
+nom:nom.value,
+numClient:numClient.value,
+poble:poble.value,
+xarxaExterna:xarxaExterna.value,
+velocitatFibra:velocitatFibra.value,
+contracte
+};
+
+if(indexActual==null){
+await addDoc(collection(db,"clients"),c);
+}else{
+await setDoc(doc(db,"clients",clients[indexActual].id),c);
+}
+nouClient();
+}
+
+window.carregarClient=i=>{
+const c=clients[i];
+indexActual=i;
+nom.value=c.nom;
+numClient.value=c.numClient;
+poble.value=c.poble;
+}
+
+window.eliminarClient=async i=>{
+if(confirm("Eliminar?")){
+await deleteDoc(doc(db,"clients",clients[i].id));
+}
+}
+
+initSelects();
 </script>
 
 </body>

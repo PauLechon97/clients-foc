@@ -2,245 +2,663 @@
 <html lang="ca">
 <head>
 <meta charset="UTF-8">
-<title>Clients FOC</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gestor de Clients FOC</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
-body { font-family: Arial; background: #f4f4f4; margin: 20px; }
-.container { max-width: 1100px; margin: auto; display: flex; gap: 20px; }
-.list, .form { background: white; padding: 15px; border-radius: 10px; flex: 1; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
-.client-item { padding: 8px; border-bottom: 1px solid #ddd; display: flex; justify-content: space-between; cursor: pointer; }
-.client-item:hover { background: #eee; }
-input, select { width: 100%; padding: 6px; border-radius: 5px; }
-button { padding: 8px; border-radius: 5px; border: none; cursor: pointer; }
-.btn-save { background: blue; color: white; width: 100%; }
-.btn-new { background: green; color: white; width: 100%; }
-.checkbox-group { display: flex; flex-wrap: wrap; gap: 10px; }
-.hidden { display:none; }
+    /* VARIABLES DE COLOR - PALETA MODERNA I NETE */
+    :root {
+        --primary: #2563eb; /* Blau vibrant */
+        --primary-hover: #1d4ed8;
+        --success: #16a34a; /* Verd suau */
+        --success-hover: #15803d;
+        --danger: #dc2626; /* Vermell alerta */
+        --danger-hover: #b91c1c;
+        --bg-body: #f1f5f9; /* Gris molt clar de fons */
+        --bg-card: #ffffff;
+        --text-main: #1e293b;
+        --text-muted: #64748b;
+        --border: #e2e8f0;
+        --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        --radius-md: 8px;
+        --radius-lg: 12px;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+        font-family: 'Plus Jakarta Sans', sans-serif; /* Font més moderna */
+        background-color: var(--bg-body);
+        color: var(--text-main);
+        margin: 0;
+        padding: 0;
+        line-height: 1.5;
+    }
+
+    /* CAPÇALERA PRINCIPAL */
+    .main-header {
+        background: var(--bg-card);
+        padding: 1rem 2rem;
+        box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        position: sticky;
+        top: 0;
+        z-index: 100;
+    }
+
+    .main-header h1 {
+        margin: 0;
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: var(--primary);
+    }
+
+    /* CONTENIDOR PRINCIPAL (APP) */
+    .app-wrapper {
+        max-width: 1400px;
+        margin: 2rem auto;
+        padding: 0 1rem;
+    }
+
+    .container {
+        display: grid;
+        grid-template-columns: 1.5fr 1fr; /* Més espai per la llista */
+        gap: 1.5rem;
+        align-items: start;
+    }
+
+    /* TARGETES (CARDS) */
+    .card {
+        background: var(--bg-card);
+        padding: 1.5rem;
+        border-radius: var(--radius-lg);
+        box-shadow: var(--shadow-md);
+        border: 1px solid var(--border);
+    }
+
+    h2, h3 {
+        margin-top: 0;
+        font-weight: 600;
+        color: var(--text-main);
+    }
+    
+    h3 {
+        border-bottom: 2px solid var(--border);
+        padding-bottom: 0.5rem;
+        margin-bottom: 1.5rem;
+    }
+
+    /* FORMULARI I INPUTS */
+    .form-group { margin-bottom: 1rem; }
+    .form-label {
+        display: block;
+        font-size: 0.875rem;
+        font-weight: 500;
+        color: var(--text-muted);
+        margin-bottom: 0.25rem;
+    }
+
+    input[type="text"], 
+    input[type="password"], 
+    select {
+        width: 100%;
+        padding: 0.75rem;
+        border-radius: var(--radius-md);
+        border: 1px solid var(--border);
+        background-color: #fbfcfd;
+        font-family: inherit;
+        font-size: 1rem;
+        transition: all 0.2s;
+    }
+
+    input:focus, select:focus {
+        outline: none;
+        border-color: var(--primary);
+        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        background-color: #fff;
+    }
+
+    /* BOTONS */
+    button {
+        padding: 0.75rem 1.5rem;
+        border-radius: var(--radius-md);
+        border: none;
+        cursor: pointer;
+        font-weight: 600;
+        font-family: inherit;
+        font-size: 0.95rem;
+        transition: all 0.2s;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+    }
+
+    button:active { transform: translateY(1px); }
+
+    .btn-primary { background: var(--primary); color: white; }
+    .btn-primary:hover { background: var(--primary-hover); }
+
+    .btn-success { background: var(--success); color: white; width: 100%; }
+    .btn-success:hover { background: var(--success-hover); }
+
+    .btn-danger { background: #fee2e2; color: var(--danger); }
+    .btn-danger:hover { background: #fecaca; }
+    
+    /* Botó logout més petit */
+    .main-header .btn-danger {
+        padding: 0.5rem 1rem;
+        font-size: 0.875rem;
+    }
+
+    /* SECCIÓ FILTRES */
+    .search-filters {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 0.75rem;
+        margin-bottom: 1rem;
+        background: #f8fafc;
+        padding: 1rem;
+        border-radius: var(--radius-md);
+        border: 1px solid var(--border);
+    }
+    
+    .search-filters input { grid-column: span 2; } /* Buscadors a línia sencera */
+
+    /* CHECKBOXES MODERNS */
+    .checkbox-group {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        margin: 1rem 0;
+        padding: 0.5rem;
+        background: #f8fafc;
+        border-radius: var(--radius-md);
+        border: 1px solid var(--border);
+    }
+
+    .checkbox-label {
+        background: white;
+        border: 1px solid var(--border);
+        padding: 0.5rem 0.75rem;
+        border-radius: 20px; /* Estil píndola */
+        font-size: 0.875rem;
+        cursor: pointer;
+        transition: all 0.2s;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        user-select: none;
+    }
+
+    .checkbox-label:hover { border-color: var(--primary); background: #eff6ff; }
+
+    .checkbox-label input { margin: 0; accent-color: var(--primary); }
+
+    /* Quan el checkbox està marcat, canvia l'estil de la etiqueta */
+    .checkbox-label:has(input:checked) {
+        background-color: var(--primary);
+        color: white;
+        border-color: var(--primary);
+    }
+    .checkbox-label:has(input:checked) input { accent-color: white; }
+
+
+    /* LLISTA DE CLIENTS */
+    #clientList {
+        margin-top: 1rem;
+        max-height: 60vh; /* Scroll si hi ha molts */
+        overflow-y: auto;
+        padding-right: 0.5rem;
+    }
+
+    .client-item {
+        padding: 1rem;
+        border-radius: var(--radius-md);
+        margin-bottom: 0.75rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .client-item:hover {
+        transform: translateX(3px);
+        border-color: var(--primary);
+        box-shadow: var(--shadow-md);
+        background-color: #eff6ff;
+    }
+
+    .client-info-main {
+        font-weight: 600;
+        font-size: 1.1rem;
+        color: var(--text-main);
+    }
+
+    .client-info-sub {
+        font-size: 0.875rem;
+        color: var(--text-muted);
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin-top: 0.25rem;
+    }
+
+    /* BADGES (ETIQUETES) */
+    .badge {
+        background: #e0f2fe;
+        color: #0369a1;
+        padding: 2px 8px;
+        border-radius: 6px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+
+    /* LOGIN */
+    .login-container {
+        height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: linear-gradient(135deg, #e0f2fe 0%, #dbeafe 100%);
+    }
+
+    .login-card {
+        width: 100%;
+        max-width: 400px;
+        padding: 2.5rem;
+        text-align: center;
+        background: white;
+        border-radius: var(--radius-lg);
+        box-shadow: var(--shadow-lg);
+    }
+    
+    .login-card h2 {
+        color: var(--primary);
+        font-weight: 800;
+        font-size: 2rem;
+        margin-bottom: 0.5rem;
+    }
+    
+    .login-card p.subtitle {
+        color: var(--text-muted);
+        margin-bottom: 2rem;
+    }
+
+    #loginError {
+        background: #fee2e2;
+        color: var(--danger);
+        padding: 0.75rem;
+        border-radius: var(--radius-md);
+        font-size: 0.875rem;
+        margin-top: 1rem;
+        border: 1px solid #fecaca;
+    }
+
+    /* UTILITATS */
+    .hidden { display: none !important; }
+    
+    /* Scrollbar personalitzat */
+    #clientList::-webkit-scrollbar { width: 6px; }
+    #clientList::-webkit-scrollbar-track { background: transparent; }
+    #clientList::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+    #clientList::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
 </style>
 </head>
 <body>
 
-<!-- LOGIN -->
-<div id="loginDiv">
-<h2>Login</h2>
-<input id="email" placeholder="Email"><br><br>
-<input id="password" type="password" placeholder="Password"><br><br>
-<button onclick="login()">Entrar</button>
-<p id="loginError" style="color:red"></p>
+<div id="loginDiv" class="login-container">
+    <div class="login-card">
+        <h2>FOC</h2>
+        <p class="subtitle">Gestió Interna de Clients</p>
+        <div class="form-group">
+            <input id="password" type="password" placeholder="Contrasenya d'accés">
+        </div>
+        <button class="btn-primary" style="width:100%" onclick="login()">
+            📩 Entrar al sistema
+        </button>
+        <div id="loginError" class="hidden"></div>
+    </div>
 </div>
 
-<!-- APP -->
 <div id="appDiv" class="hidden">
-<h2>Clients FOC</h2>
-<button onclick="logout()">Logout</button>
 
-<div class="container">
+    <header class="main-header">
+        <h1>Gestor Clients FOC Centelles</h1>
+        <button class="btn-danger" onclick="logout()">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M12.5 15a.5.5 0 0 1-.5-.5v-13a.5.5 0 0 1 1 0v13a.5.5 0 0 1-.5.5zM10 8a.5.5 0 0 1-.5.5H3.707l2.147 2.146a.5.5 0 0 1-.708.708l-3-3a.5.5 0 0 1 0-.708l3-3a.5.5 0 1 1 .708.708L3.707 7.5H9.5a.5.5 0 0 1 .5.5z"/></svg>
+            Tancar Sessió
+        </button>
+    </header>
 
-<div class="list">
-<button class="btn-new" onclick="nouClient()">+ Nou</button>
+    <div class="app-wrapper">
+        <div class="container">
 
-<input id="filtreNom" placeholder="Filtrar nom">
-<input id="filtreNum" placeholder="Filtrar nº">
+            <div class="card">
+                <div style="margin-bottom: 1.5rem;">
+                    <button class="btn-success" onclick="nouClient()">
+                        <svg width="20" height="20" viewBox="0 0 16 16" fill="currentColor"><path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4z"/></svg>
+                        Afegir Nou Client
+                    </button>
+                </div>
 
-<select id="filtrePoble"></select>
-<select id="filtreXarxa"></select>
+                <h3>Cercar i Filtrar</h3>
+                <div class="search-filters">
+                    <input id="filtreNom" placeholder="🔍 Cercar per nom del client...">
+                    <input id="filtreNum" placeholder="🔢 Número de client...">
 
-<select id="filtreVelocitat">
-<option value="">Totes</option>
-<option>100/100 Mbps</option>
-<option>300/300 Mbps</option>
-<option>600/600 Mbps</option>
-<option>1000/1000 Mbps</option>
-</select>
+                    <select id="filtrePoble"></select>
+                    <select id="filtreXarxa"></select>
 
-<div class="checkbox-group">
-<label><input type="checkbox" class="filtreContracte" value="Fibra">Fibra</label>
-<label><input type="checkbox" class="filtreContracte" value="IP">IP</label>
-<label><input type="checkbox" class="filtreContracte" value="Mòbil">Mòbil</label>
-<label><input type="checkbox" class="filtreContracte" value="Fix">Fix</label>
-<label><input type="checkbox" class="filtreContracte" value="Wimax">Wimax</label>
-</div>
+                    <select id="filtreVelocitat" style="grid-column: span 2;">
+                        <option value="">Totes les velocitats</option>
+                        <option>100/100 Mbps</option>
+                        <option>300/300 Mbps</option>
+                        <option>600/600 Mbps</option>
+                        <option>1000/1000 Mbps</option>
+                    </select>
+                </div>
 
-<div id="clientList"></div>
-<div id="pagination"></div>
-</div>
+                <div class="form-label">Filtrar per serveis contractats:</div>
+                <div class="checkbox-group">
+                    <label class="checkbox-label"><input type="checkbox" class="filtreContracte" value="Fibra">Fibra</label>
+                    <label class="checkbox-label"><input type="checkbox" class="filtreContracte" value="IP">IP</label>
+                    <label class="checkbox-label"><input type="checkbox" class="filtreContracte" value="Mòbil">Mòbil</label>
+                    <label class="checkbox-label"><input type="checkbox" class="filtreContracte" value="Fix">Fix</label>
+                    <label class="checkbox-label"><input type="checkbox" class="filtreContracte" value="Wimax">Wimax</label>
+                </div>
 
-<div class="form">
-<input id="nom" placeholder="Nom">
-<input id="numClient" placeholder="Número">
+                <div id="clientList">
+                    </div>
+            </div>
 
-<select id="poble"></select>
-<select id="xarxaExterna"></select>
+            <div class="card" style="position: sticky; top: 80px;">
+                <h3 id="formTitle">Detalls del Client</h3>
+                
+                <div class="form-group">
+                    <label class="form-label">Nom complet</label>
+                    <input id="nom" placeholder="Ex: Joan Garcia Perez">
+                </div>
 
-<select id="velocitatFibra">
-<option value="">Velocitat</option>
-<option>100/100 Mbps</option>
-<option>300/300 Mbps</option>
-<option>600/600 Mbps</option>
-<option>1000/1000 Mbps</option>
-</select>
+                <div class="form-group">
+                    <label class="form-label">Número de Client</label>
+                    <input id="numClient" placeholder="Ex: FOC001">
+                </div>
 
-<div class="checkbox-group">
-<label><input type="checkbox" class="contracteOpcio" value="Fibra">Fibra</label>
-<label><input type="checkbox" class="contracteOpcio" value="IP">IP</label>
-<label><input type="checkbox" class="contracteOpcio" value="Mòbil">Mòbil</label>
-<label><input type="checkbox" class="contracteOpcio" value="Fix">Fix</label>
-<label><input type="checkbox" class="contracteOpcio" value="Wimax">Wimax</label>
-</div>
+                <div class="container" style="grid-template-columns: 1fr 1fr; gap: 1rem; margin: 0; padding: 0;">
+                    <div class="form-group">
+                        <label class="form-label">Població</label>
+                        <select id="poble"></select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Xarxa</label>
+                        <select id="xarxaExterna"></select>
+                    </div>
+                </div>
 
-<button class="btn-save" onclick="guardarClient()">Guardar</button>
-</div>
+                <div class="form-group">
+                    <label class="form-label">Velocitat Fibra</label>
+                    <select id="velocitatFibra">
+                        <option value="">No seleccionat</option>
+                        <option>100/100 Mbps</option>
+                        <option>300/300 Mbps</option>
+                        <option>600/600 Mbps</option>
+                        <option>1000/1000 Mbps</option>
+                    </select>
+                </div>
+
+                <div class="form-label">Serveis Actius</div>
+                <div class="checkbox-group">
+                    <label class="checkbox-label"><input type="checkbox" class="contracteOpcio" value="Fibra">Fibra</label>
+                    <label class="checkbox-label"><input type="checkbox" class="contracteOpcio" value="IP">IP</label>
+                    <label class="checkbox-label"><input type="checkbox" class="contracteOpcio" value="Mòbil">Mòbil</label>
+                    <label class="checkbox-label"><input type="checkbox" class="contracteOpcio" value="Fix">Fix</label>
+                    <label class="checkbox-label"><input type="checkbox" class="contracteOpcio" value="Wimax">Wimax</label>
+                </div>
+
+                <div style="margin-top: 2rem; display: flex; gap: 1rem;">
+                    <button class="btn-primary" style="flex: 1;" onclick="guardarClient()">
+                        <svg width="18" height="18" viewBox="0 0 16 16" fill="currentColor"><path d="M11 2H9v3h2V2Z"/><path d="M1.5 0h11.586a1.5 1.5 0 0 1 1.06.44l1.415 1.414A1.5 1.5 0 0 1 16 2.914V14.5a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 0 14.5v-13A1.5 1.5 0 0 1 1.5 0ZM1 1.5v13a.5.5 0 0 0 .5.5H2v-4.5A1.5 1.5 0 0 1 3.5 9h9a1.5 1.5 0 0 1 1.5 1.5V15h.5a.5.5 0 0 0 .5-.5V2.914a.5.5 0 0 0-.146-.353l-1.415-1.415A.5.5 0 0 0 13.086 1H13v4.5A1.5 1.5 0 0 1 11.5 7h-7A1.5 1.5 0 0 1 3 5.5V1H1.5a.5.5 0 0 0-.5.5Zm3-.5v4.5a.5.5 0 0 0 .5.5h7a.5.5 0 0 0 .5-.5V1H4Zm9 14v-4.5a.5.5 0 0 0-.5-.5h-9a.5.5 0 0 0-.5.5V15h10Z"/></svg>
+                        Guardar Canvis
+                    </button>
+                </div>
+            </div>
+
+        </div>
+    </div>
 
 </div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
 import { getFirestore, collection, addDoc, onSnapshot, doc, deleteDoc, setDoc } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-firestore.js";
-import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js";
 
+// !!! RECORDA POSAR LA TEVA API KEY COMPLETA AQUÍ !!!
 const firebaseConfig = {
-apiKey: "AIzaSyBu...",
-authDomain: "focentellesclients.firebaseapp.com",
-projectId: "focentellesclients"
+    apiKey: "AIzaSyBu...", 
+    authDomain: "focentellesclients.firebaseapp.com",
+    projectId: "focentellesclients"
 };
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
-const auth = getAuth(app);
+
+// Contrasenya (Insegur, però és el mètode actual)
+const PASSWORD = "FOC6pu6A";
 
 let clients = [];
 let indexActual = null;
-let paginaActual = 1;
-let perPagina = 10;
 
+// Configuració
 const poblacions = ["Centelles","Tona","Vic","Granollers"];
 const xarxes = ["FOC","Adamo","Masmovil"];
 
-onAuthStateChanged(auth, user => {
-if(user){
-loginDiv.classList.add("hidden");
-appDiv.classList.remove("hidden");
-initSelects();
-initFilters();
-loadClients();
-}else{
-loginDiv.classList.remove("hidden");
-appDiv.classList.add("hidden");
-}
-});
-
-window.login = async () => {
-try{
-await signInWithEmailAndPassword(auth, email.value, password.value);
-}catch(e){
-loginError.innerText = "Error login";
-}
+// LOGIN
+window.login = () => {
+    const passInput = document.getElementById("password");
+    const errDiv = document.getElementById("loginError");
+    
+    if(passInput.value === PASSWORD){
+        document.getElementById("loginDiv").classList.add("hidden");
+        document.getElementById("appDiv").classList.remove("hidden");
+        errDiv.classList.add("hidden");
+        initSelects();
+        initFilters();
+        loadClients();
+    }else{
+        errDiv.innerText = "⚠️ Contrasenya incorrecta. Torna-ho a provar.";
+        errDiv.classList.remove("hidden");
+        passInput.value = "";
+        passInput.focus();
+    }
 };
 
-window.logout = () => signOut(auth);
+window.logout = () => {
+    document.getElementById("loginDiv").classList.remove("hidden");
+    document.getElementById("appDiv").classList.add("hidden");
+    document.getElementById("password").value = "";
+};
 
+// Inicialitzar Desplegables
 function initSelects(){
-const p=document.getElementById("poble");
-const fp=document.getElementById("filtrePoble");
-const x=document.getElementById("xarxaExterna");
-const fx=document.getElementById("filtreXarxa");
+    const p=document.getElementById("poble");
+    const fp=document.getElementById("filtrePoble");
+    const x=document.getElementById("xarxaExterna");
+    const fx=document.getElementById("filtreXarxa");
 
-fp.innerHTML='<option value="">Tots pobles</option>';
-fx.innerHTML='<option value="">Totes</option>';
+    // Netejar i posar opcions per defecte
+    p.innerHTML = '<option value="">Selecciona poble...</option>';
+    fp.innerHTML = '<option value="">Tots els pobles</option>';
+    x.innerHTML = '<option value="">Selecciona xarxa...</option>';
+    fx.innerHTML = '<option value="">Totes les xarxes</option>';
 
-poblacions.forEach(v=>{
-p.innerHTML+=`<option>${v}</option>`;
-fp.innerHTML+=`<option>${v}</option>`;
-});
-xarxes.forEach(v=>{
-x.innerHTML+=`<option>${v}</option>`;
-fx.innerHTML+=`<option>${v}</option>`;
-});
+    poblacions.forEach(v=>{
+        p.innerHTML+=`<option>${v}</option>`;
+        fp.innerHTML+=`<option>${v}</option>`;
+    });
+    xarxes.forEach(v=>{
+        x.innerHTML+=`<option>${v}</option>`;
+        fx.innerHTML+=`<option>${v}</option>`;
+    });
 }
 
+// Inicialitzar Escoltadors de Filtres
 function initFilters(){
-[filtreNom,filtreNum,filtrePoble,filtreXarxa,filtreVelocitat].forEach(el=>el.addEventListener("input",renderList));
-document.querySelectorAll(".filtreContracte").forEach(el=>el.addEventListener("change",renderList));
+    const inputs = [filtreNom,filtreNum,filtrePoble,filtreXarxa,filtreVelocitat];
+    inputs.forEach(el=>el.addEventListener("input",renderList));
+    
+    document.querySelectorAll(".filtreContracte").forEach(el=>el.addEventListener("change",renderList));
 }
 
+// Carregar dades en temps real
 function loadClients(){
-onSnapshot(collection(db,"clients"), snap=>{
-clients=[];
-snap.forEach(d=>clients.push({id:d.id,...d.data()}));
-renderList();
-});
+    onSnapshot(collection(db,"clients"), snap=>{
+        clients=[];
+        snap.forEach(d=>clients.push({id:d.id,...d.data()}));
+        renderList();
+    });
 }
 
+// Pintar la llista (amb els filtres aplicats)
 function renderList(){
-const nomF=filtreNom.value.toLowerCase();
-const numF=filtreNum.value;
-const pobleF=filtrePoble.value;
-const xarxaF=filtreXarxa.value;
-const velocitatF=filtreVelocitat.value;
-const contractesF=[...document.querySelectorAll(".filtreContracte:checked")].map(c=>c.value);
+    const nomF=filtreNom.value.toLowerCase();
+    const numF=filtreNum.value;
+    const pobleF=filtrePoble.value;
+    const xarxaF=filtreXarxa.value;
+    const velocitatF=filtreVelocitat.value;
+    const contractesF=[...document.querySelectorAll(".filtreContracte:checked")].map(c=>c.value);
 
-let filtrats = clients.filter(c=>{
-if(nomF && !c.nom?.toLowerCase().includes(nomF)) return false;
-if(numF && !c.numClient?.includes(numF)) return false;
-if(pobleF && c.poble!==pobleF) return false;
-if(xarxaF && c.xarxaExterna!==xarxaF) return false;
-if(velocitatF && c.velocitatFibra!==velocitatF) return false;
-if(contractesF.length>0 && !contractesF.some(v=>c.contracte?.includes(v))) return false;
-return true;
-});
+    let filtrats = clients.filter(c=>{
+        if(nomF && !c.nom?.toLowerCase().includes(nomF)) return false;
+        if(numF && !c.numClient?.includes(numF)) return false;
+        if(pobleF && c.poble!==pobleF) return false;
+        if(xarxaF && c.xarxaExterna!==xarxaF) return false;
+        if(velocitatF && c.velocitatFibra!==velocitatF) return false;
+        // Filtre de contractes: el client ha de tenir TOTS els serveis seleccionats al filtre
+        if(contractesF.length>0 && !contractesF.every(v=>c.contracte?.includes(v))) return false;
+        return true;
+    });
 
-const inici=(paginaActual-1)*perPagina;
-const pag=filtrats.slice(inici,inici+perPagina);
+    const listDiv = document.getElementById("clientList");
+    listDiv.innerHTML="";
+    
+    if(filtrats.length === 0) {
+        listDiv.innerHTML = '<div style="text-align:center; padding:2rem; color:#64748b;">No s\'han trobat clients amb aquests filtres.</div>';
+        return;
+    }
 
-clientList.innerHTML="";
-pag.forEach(c=>{
-const div=document.createElement("div");
-div.className="client-item";
-div.innerHTML=`${c.nom} - ${c.poble}
-<button onclick="event.stopPropagation(); eliminarClient('${c.id}')">🗑</button>`;
-div.onclick=()=>carregarClient(c);
-clientList.appendChild(div);
-});
+    filtrats.forEach(c=>{
+        const div=document.createElement("div");
+        div.className="client-item";
+        
+        // Crear badges per als contractes per visualitzar-ho millor
+        let badgesHtml = '';
+        if(c.contracte && c.contracte.length > 0) {
+            badgesHtml = '<div style="display:flex; gap:3px; margin-top:5px;">';
+            c.contracte.forEach(servei => {
+                badgesHtml += `<span class="badge" style="background:#f1f5f9; color:#475569; font-size:10px;">${servei}</span>`;
+            });
+            badgesHtml += '</div>';
+        }
+
+        div.innerHTML=`
+            <div>
+                <div class="client-info-main">${c.nom}</div>
+                <div class="client-info-sub">
+                    <span class="badge">${c.numClient || 'S/N'}</span> 
+                    📍 ${c.poble || 'No poble'}
+                </div>
+                ${badgesHtml}
+            </div>
+            <button class="btn-danger" title="Eliminar client" onclick="event.stopPropagation(); eliminarClient('${c.id}', '${c.nom}')">
+                🗑
+            </button>`;
+            
+        div.onclick=()=>carregarClient(c);
+        listDiv.appendChild(div);
+    });
 }
 
+// Preparar formulari per nou client
 window.nouClient=()=>{
-indexActual=null;
-nom.value="";
-numClient.value="";
+    indexActual=null;
+    document.getElementById("formTitle").innerText = "Nou Client";
+    document.getElementById("nom").value="";
+    document.getElementById("numClient").value="";
+    document.getElementById("poble").value="";
+    document.getElementById("xarxaExterna").value="";
+    document.getElementById("velocitatFibra").value="";
+    // CORRECCIÓ: Netejar checkboxes
+    document.querySelectorAll(".contracteOpcio").forEach(cb => cb.checked = false);
+    document.getElementById("nom").focus();
 };
 
+// Guardar (Crear o Editar)
 window.guardarClient=async()=>{
-const contracte=[...document.querySelectorAll(".contracteOpcio:checked")].map(c=>c.value);
+    const nomVal = document.getElementById("nom").value;
+    if(!nomVal) { alert("El nom és obligatori"); return; }
 
-const c={
-nom:nom.value,
-numClient:numClient.value,
-poble:poble.value,
-xarxaExterna:xarxaExterna.value,
-velocitatFibra:velocitatFibra.value,
-contracte
+    const contracte=[...document.querySelectorAll(".contracteOpcio:checked")].map(c=>c.value);
+
+    const c={
+        nom: nomVal,
+        numClient: document.getElementById("numClient").value,
+        poble: document.getElementById("poble").value,
+        xarxaExterna: document.getElementById("xarxaExterna").value,
+        velocitatFibra: document.getElementById("velocitatFibra").value,
+        contracte,
+        updatedAt: new Date() // Afegim data actualització
+    };
+
+    try {
+        if(indexActual==null){
+            await addDoc(collection(db,"clients"),c);
+        }else{
+            await setDoc(doc(db,"clients",indexActual),c);
+        }
+        nouClient(); // Neteja el formulari
+    } catch (e) {
+        console.error("Error guardant:", e);
+        alert("Error en guardar el client.");
+    }
 };
 
-if(indexActual==null){
-await addDoc(collection(db,"clients"),c);
-}else{
-await setDoc(doc(db,"clients",indexActual),c);
-}
-nouClient();
-};
-
+// Carregar dades d'un client al formulari per editar
 window.carregarClient=c=>{
-indexActual=c.id;
-nom.value=c.nom;
-numClient.value=c.numClient;
-poble.value=c.poble;
-xarxaExterna.value=c.xarxaExterna;
-velocitatFibra.value=c.velocitatFibra;
+    indexActual=c.id;
+    document.getElementById("formTitle").innerText = "Editant: " + c.nom;
+    document.getElementById("nom").value=c.nom || "";
+    document.getElementById("numClient").value=c.numClient || "";
+    document.getElementById("poble").value=c.poble || "";
+    document.getElementById("xarxaExterna").value=c.xarxaExterna || "";
+    document.getElementById("velocitatFibra").value=c.velocitatFibra || "";
+    
+    // CORRECCIÓ: Marcar checkboxes corresponents
+    const serveisClient = c.contracte || [];
+    document.querySelectorAll(".contracteOpcio").forEach(cb => {
+        cb.checked = serveisClient.includes(cb.value);
+    });
 };
 
-window.eliminarClient=async id=>{
-if(confirm("Eliminar?")){
-await deleteDoc(doc(db,"clients",id));
-}
+// Eliminar client
+window.eliminarClient=async (id, nom)=>{
+    if(confirm(`Estàs segur que vols eliminar el client "${nom}"? Aquesta acció no es pot desfer.`)){
+        try {
+            await deleteDoc(doc(db,"clients",id));
+            if(indexActual === id) nouClient(); // Si estàvem editant aquest, netegem
+        } catch (e) {
+            alert("Error en eliminar.");
+        }
+    }
 };
 </script>
 

@@ -3,39 +3,48 @@
 <head>
 <meta charset="UTF-8">
 <title>Clients FOC</title>
-
 <style>
 body { font-family: Arial; background: #f4f4f4; margin: 20px; }
 .container { max-width: 1100px; margin: auto; display: flex; gap: 20px; }
 .list, .form { background: white; padding: 15px; border-radius: 10px; flex: 1; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
-.client-item { padding: 8px; border-bottom: 1px solid #ddd; display: flex; justify-content: space-between; cursor: pointer;}
+.client-item { padding: 8px; border-bottom: 1px solid #ddd; display: flex; justify-content: space-between; cursor: pointer; }
 .client-item:hover { background: #eee; }
-.field { margin: 10px 0; }
 input, select { width: 100%; padding: 6px; border-radius: 5px; }
 button { padding: 8px; border-radius: 5px; border: none; cursor: pointer; }
-.btn-delete { background: red; color: white; }
 .btn-save { background: blue; color: white; width: 100%; }
 .btn-new { background: green; color: white; width: 100%; }
 .checkbox-group { display: flex; flex-wrap: wrap; gap: 10px; }
+.hidden { display:none; }
 </style>
 </head>
-
 <body>
 
+<!-- LOGIN -->
+<div id="loginDiv">
+<h2>Login</h2>
+<input id="email" placeholder="Email"><br><br>
+<input id="password" type="password" placeholder="Password"><br><br>
+<button onclick="login()">Entrar</button>
+<p id="loginError" style="color:red"></p>
+</div>
+
+<!-- APP -->
+<div id="appDiv" class="hidden">
 <h2>Clients FOC</h2>
+<button onclick="logout()">Logout</button>
 
 <div class="container">
 
 <div class="list">
 <button class="btn-new" onclick="nouClient()">+ Nou</button>
 
-<input id="filtreNom" placeholder="Filtrar nom" oninput="renderList()">
-<input id="filtreNum" placeholder="Filtrar nº" oninput="renderList()">
+<input id="filtreNom" placeholder="Filtrar nom">
+<input id="filtreNum" placeholder="Filtrar nº">
 
-<select id="filtrePoble" onchange="renderList()"></select>
-<select id="filtreXarxa" onchange="renderList()"></select>
+<select id="filtrePoble"></select>
+<select id="filtreXarxa"></select>
 
-<select id="filtreVelocitat" onchange="renderList()">
+<select id="filtreVelocitat">
 <option value="">Totes</option>
 <option>100/100 Mbps</option>
 <option>300/300 Mbps</option>
@@ -44,15 +53,14 @@ button { padding: 8px; border-radius: 5px; border: none; cursor: pointer; }
 </select>
 
 <div class="checkbox-group">
-<label><input type="checkbox" class="filtreContracte" value="Fibra" onchange="renderList()">Fibra</label>
-<label><input type="checkbox" class="filtreContracte" value="IP" onchange="renderList()">IP</label>
-<label><input type="checkbox" class="filtreContracte" value="Mòbil" onchange="renderList()">Mòbil</label>
-<label><input type="checkbox" class="filtreContracte" value="Fix" onchange="renderList()">Fix</label>
-<label><input type="checkbox" class="filtreContracte" value="Wimax" onchange="renderList()">Wimax</label>
+<label><input type="checkbox" class="filtreContracte" value="Fibra">Fibra</label>
+<label><input type="checkbox" class="filtreContracte" value="IP">IP</label>
+<label><input type="checkbox" class="filtreContracte" value="Mòbil">Mòbil</label>
+<label><input type="checkbox" class="filtreContracte" value="Fix">Fix</label>
+<label><input type="checkbox" class="filtreContracte" value="Wimax">Wimax</label>
 </div>
 
 <div id="clientList"></div>
-<div id="pagination"></div>
 </div>
 
 <div class="form">
@@ -83,30 +91,59 @@ button { padding: 8px; border-radius: 5px; border: none; cursor: pointer; }
 
 </div>
 
-<!-- FIREBASE -->
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
 import { getFirestore, collection, addDoc, onSnapshot, doc, deleteDoc, setDoc } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-firestore.js";
+import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js";
 
 const firebaseConfig = {
 apiKey: "AIzaSyBu...",
 authDomain: "focentellesclients.firebaseapp.com",
-projectId: "focentellesclients",
-storageBucket: "focentellesclients.firebasestorage.app",
-messagingSenderId: "754969193561",
-appId: "1:754969193561:web:6f66c5ff9e5cd824a89548"
+projectId: "focentellesclients"
 };
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
+const auth = getAuth(app);
 
 let clients = [];
 let indexActual = null;
-let paginaActual = 1;
-let perPagina = 10;
 
 const poblacions = ["Centelles","Tona","Vic","Granollers"];
 const xarxes = ["FOC","Adamo","Masmovil"];
+
+// DEBOUNCE
+function debounce(fn, delay=300){
+let timeout;
+return (...args)=>{
+clearTimeout(timeout);
+timeout=setTimeout(()=>fn(...args),delay);
+};
+}
+
+// AUTH
+onAuthStateChanged(auth, user => {
+if(user){
+loginDiv.classList.add("hidden");
+appDiv.classList.remove("hidden");
+initSelects();
+initFilters();
+loadClients();
+}else{
+loginDiv.classList.remove("hidden");
+appDiv.classList.add("hidden");
+}
+});
+
+window.login = async () => {
+try{
+await signInWithEmailAndPassword(auth, email.value, password.value);
+}catch(e){
+loginError.innerText = "Error login";
+}
+};
+
+window.logout = () => signOut(auth);
 
 function initSelects(){
 const p=document.getElementById("poble");
@@ -127,32 +164,47 @@ fx.innerHTML+=`<option>${v}</option>`;
 });
 }
 
+function initFilters(){
+const inputs=[filtreNom,filtreNum,filtrePoble,filtreXarxa,filtreVelocitat];
+inputs.forEach(el=>el.addEventListener("input",debouncedRender));
+document.querySelectorAll(".filtreContracte").forEach(el=>el.addEventListener("change",debouncedRender));
+}
+
+const debouncedRender = debounce(renderList,300);
+
+function loadClients(){
 onSnapshot(collection(db,"clients"), snap=>{
 clients=[];
 snap.forEach(d=>clients.push({id:d.id,...d.data()}));
 renderList();
 });
+}
 
 function renderList(){
 const nomF=filtreNom.value.toLowerCase();
 const numF=filtreNum.value;
+const pobleF=filtrePoble.value;
+const xarxaF=filtreXarxa.value;
+const velocitatF=filtreVelocitat.value;
+const contractesF=[...document.querySelectorAll(".filtreContracte:checked")].map(c=>c.value);
 
-let filtrats=clients.filter(c=>{
-if(nomF && !c.nom.toLowerCase().includes(nomF)) return false;
-if(numF && !c.numClient.includes(numF)) return false;
+let filtrats = clients.filter(c=>{
+if(nomF && !c.nom?.toLowerCase().includes(nomF)) return false;
+if(numF && !c.numClient?.includes(numF)) return false;
+if(pobleF && c.poble!==pobleF) return false;
+if(xarxaF && c.xarxaExterna!==xarxaF) return false;
+if(velocitatF && c.velocitatFibra!==velocitatF) return false;
+if(contractesF.length>0 && !contractesF.some(v=>c.contracte?.includes(v))) return false;
 return true;
 });
 
-const inici=(paginaActual-1)*perPagina;
-const pag=filtrats.slice(inici,inici+perPagina);
-
 clientList.innerHTML="";
-pag.forEach((c,i)=>{
+filtrats.forEach(c=>{
 const div=document.createElement("div");
 div.className="client-item";
 div.innerHTML=`${c.nom} - ${c.poble}
-<button onclick="eliminarClient(${i})">🗑</button>`;
-div.onclick=()=>carregarClient(i);
+<button onclick="event.stopPropagation(); eliminarClient('${c.id}')">🗑</button>`;
+div.onclick=()=>carregarClient(c);
 clientList.appendChild(div);
 });
 }
@@ -161,7 +213,7 @@ window.nouClient=()=>{
 indexActual=null;
 nom.value="";
 numClient.value="";
-}
+};
 
 window.guardarClient=async()=>{
 const contracte=[...document.querySelectorAll(".contracteOpcio:checked")].map(c=>c.value);
@@ -178,26 +230,25 @@ contracte
 if(indexActual==null){
 await addDoc(collection(db,"clients"),c);
 }else{
-await setDoc(doc(db,"clients",clients[indexActual].id),c);
+await setDoc(doc(db,"clients",indexActual),c);
 }
 nouClient();
-}
+};
 
-window.carregarClient=i=>{
-const c=clients[i];
-indexActual=i;
+window.carregarClient=c=>{
+indexActual=c.id;
 nom.value=c.nom;
 numClient.value=c.numClient;
 poble.value=c.poble;
-}
+xarxaExterna.value=c.xarxaExterna;
+velocitatFibra.value=c.velocitatFibra;
+};
 
-window.eliminarClient=async i=>{
+window.eliminarClient=async id=>{
 if(confirm("Eliminar?")){
-await deleteDoc(doc(db,"clients",clients[i].id));
+await deleteDoc(doc(db,"clients",id));
 }
-}
-
-initSelects();
+};
 </script>
 
 </body>

@@ -3,18 +3,18 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Gestor de Clients FOC</title>
+<title>FOC Clients</title>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
 <style>
-    /* VARIABLES DE COLOR - PALETA MODERNA I NETE */
     :root {
-        --primary: #2563eb; /* Blau vibrant */
+        --primary: #2563eb;
         --primary-hover: #1d4ed8;
-        --success: #16a34a; /* Verd suau */
+        --success: #16a34a;
         --success-hover: #15803d;
-        --danger: #dc2626; /* Vermell alerta */
+        --danger: #dc2626;
         --danger-hover: #b91c1c;
-        --bg-body: #f1f5f9; /* Gris molt clar de fons */
+        --bg-body: #f1f5f9;
         --bg-card: #ffffff;
         --text-main: #1e293b;
         --text-muted: #64748b;
@@ -28,7 +28,7 @@
     * { box-sizing: border-box; }
 
     body {
-        font-family: 'Plus Jakarta Sans', sans-serif; /* Font més moderna */
+        font-family: 'Plus Jakarta Sans', sans-serif;
         background-color: var(--bg-body);
         color: var(--text-main);
         margin: 0;
@@ -36,7 +36,6 @@
         line-height: 1.5;
     }
 
-    /* CAPÇALERA PRINCIPAL */
     .main-header {
         background: var(--bg-card);
         padding: 1rem 2rem;
@@ -56,7 +55,6 @@
         color: var(--primary);
     }
 
-    /* CONTENIDOR PRINCIPAL (APP) */
     .app-wrapper {
         max-width: 1400px;
         margin: 2rem auto;
@@ -65,12 +63,11 @@
 
     .container {
         display: grid;
-        grid-template-columns: 1.5fr 1fr; /* Més espai per la llista */
+        grid-template-columns: 1.5fr 1fr;
         gap: 1.5rem;
         align-items: start;
     }
 
-    /* TARGETES (CARDS) */
     .card {
         background: var(--bg-card);
         padding: 1.5rem;
@@ -79,19 +76,15 @@
         border: 1px solid var(--border);
     }
 
-    h2, h3 {
+    h3 {
         margin-top: 0;
         font-weight: 600;
         color: var(--text-main);
-    }
-    
-    h3 {
         border-bottom: 2px solid var(--border);
         padding-bottom: 0.5rem;
         margin-bottom: 1.5rem;
     }
 
-    /* FORMULARI I INPUTS */
     .form-group { margin-bottom: 1rem; }
     .form-label {
         display: block;
@@ -101,9 +94,7 @@
         margin-bottom: 0.25rem;
     }
 
-    input[type="text"], 
-    input[type="password"], 
-    select {
+    input[type="text"], input[type="password"], select {
         width: 100%;
         padding: 0.75rem;
         border-radius: var(--radius-md);
@@ -121,7 +112,6 @@
         background-color: #fff;
     }
 
-    /* BOTONS */
     button {
         padding: 0.75rem 1.5rem;
         border-radius: var(--radius-md);
@@ -129,32 +119,21 @@
         cursor: pointer;
         font-weight: 600;
         font-family: inherit;
-        font-size: 0.95rem;
-        transition: all 0.2s;
         display: inline-flex;
         align-items: center;
         justify-content: center;
         gap: 0.5rem;
+        transition: all 0.2s;
     }
-
-    button:active { transform: translateY(1px); }
 
     .btn-primary { background: var(--primary); color: white; }
     .btn-primary:hover { background: var(--primary-hover); }
-
-    .btn-success { background: var(--success); color: white; width: 100%; }
+    .btn-success { background: var(--success); color: white; }
     .btn-success:hover { background: var(--success-hover); }
-
     .btn-danger { background: #fee2e2; color: var(--danger); }
-    .btn-danger:hover { background: #fecaca; }
-    
-    /* Botó logout més petit */
-    .main-header .btn-danger {
-        padding: 0.5rem 1rem;
-        font-size: 0.875rem;
-    }
+    .btn-excel { background: #e2e8f0; color: #1e293b; }
+    .btn-excel:hover { background: #cbd5e1; }
 
-    /* SECCIÓ FILTRES */
     .search-filters {
         display: grid;
         grid-template-columns: 1fr 1fr;
@@ -165,10 +144,8 @@
         border-radius: var(--radius-md);
         border: 1px solid var(--border);
     }
-    
-    .search-filters input { grid-column: span 2; } /* Buscadors a línia sencera */
+    .search-filters input { grid-column: span 2; }
 
-    /* CHECKBOXES MODERNS */
     .checkbox-group {
         display: flex;
         flex-wrap: wrap;
@@ -184,36 +161,22 @@
         background: white;
         border: 1px solid var(--border);
         padding: 0.5rem 0.75rem;
-        border-radius: 20px; /* Estil píndola */
+        border-radius: 20px;
         font-size: 0.875rem;
         cursor: pointer;
-        transition: all 0.2s;
         display: flex;
         align-items: center;
         gap: 0.5rem;
-        user-select: none;
+        transition: all 0.2s;
     }
 
-    .checkbox-label:hover { border-color: var(--primary); background: #eff6ff; }
-
-    .checkbox-label input { margin: 0; accent-color: var(--primary); }
-
-    /* Quan el checkbox està marcat, canvia l'estil de la etiqueta */
     .checkbox-label:has(input:checked) {
         background-color: var(--primary);
         color: white;
         border-color: var(--primary);
     }
-    .checkbox-label:has(input:checked) input { accent-color: white; }
 
-
-    /* LLISTA DE CLIENTS */
-    #clientList {
-        margin-top: 1rem;
-        max-height: 60vh; /* Scroll si hi ha molts */
-        overflow-y: auto;
-        padding-right: 0.5rem;
-    }
+    #clientList { margin-top: 1rem; max-height: 60vh; overflow-y: auto; }
 
     .client-item {
         padding: 1rem;
@@ -228,29 +191,8 @@
         transition: all 0.2s;
     }
 
-    .client-item:hover {
-        transform: translateX(3px);
-        border-color: var(--primary);
-        box-shadow: var(--shadow-md);
-        background-color: #eff6ff;
-    }
+    .client-item:hover { transform: translateX(3px); border-color: var(--primary); background: #f0f7ff; }
 
-    .client-info-main {
-        font-weight: 600;
-        font-size: 1.1rem;
-        color: var(--text-main);
-    }
-
-    .client-info-sub {
-        font-size: 0.875rem;
-        color: var(--text-muted);
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-        margin-top: 0.25rem;
-    }
-
-    /* BADGES (ETIQUETES) */
     .badge {
         background: #e0f2fe;
         color: #0369a1;
@@ -258,117 +200,51 @@
         border-radius: 6px;
         font-size: 0.75rem;
         font-weight: 600;
-        text-transform: uppercase;
-        letter-spacing: 0.05em;
     }
 
-    /* LOGIN */
-    .login-container {
-        height: 100vh;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        background: linear-gradient(135deg, #e0f2fe 0%, #dbeafe 100%);
-    }
-
-    .login-card {
-        width: 100%;
-        max-width: 400px;
-        padding: 2.5rem;
-        text-align: center;
-        background: white;
-        border-radius: var(--radius-lg);
-        box-shadow: var(--shadow-lg);
-    }
+    .login-container { height: 100vh; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #e0f2fe 0%, #dbeafe 100%); }
+    .login-card { width: 100%; max-width: 400px; padding: 2.5rem; text-align: center; background: white; border-radius: var(--radius-lg); box-shadow: var(--shadow-lg); }
     
-    .login-card h2 {
-        color: var(--primary);
-        font-weight: 800;
-        font-size: 2rem;
-        margin-bottom: 0.5rem;
-    }
-    
-    .login-card p.subtitle {
-        color: var(--text-muted);
-        margin-bottom: 2rem;
-    }
-
-    #loginError {
-        background: #fee2e2;
-        color: var(--danger);
-        padding: 0.75rem;
-        border-radius: var(--radius-md);
-        font-size: 0.875rem;
-        margin-top: 1rem;
-        border: 1px solid #fecaca;
-    }
-
-    /* UTILITATS */
     .hidden { display: none !important; }
-    
-    /* Scrollbar personalitzat */
-    #clientList::-webkit-scrollbar { width: 6px; }
-    #clientList::-webkit-scrollbar-track { background: transparent; }
-    #clientList::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
-    #clientList::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
-
 </style>
 </head>
 <body>
 
 <div id="loginDiv" class="login-container">
     <div class="login-card">
-        <h2>FOC</h2>
-        <p class="subtitle">Gestió Interna de Clients</p>
+        <h2 style="color:var(--primary); font-size: 2rem; margin-bottom: 0.5rem;">FOC</h2>
+        <p style="color:var(--text-muted); margin-bottom: 2rem;">Gestió Interna de Clients</p>
         <div class="form-group">
             <input id="password" type="password" placeholder="Contrasenya d'accés">
         </div>
-        <button class="btn-primary" style="width:100%" onclick="login()">
-             Entra
-        </button>
-        <div id="loginError" class="hidden"></div>
+        <button class="btn-primary" style="width:100%" onclick="login()">Entrar</button>
+        <div id="loginError" class="hidden" style="color:var(--danger); margin-top: 1rem; font-size: 0.875rem;"></div>
     </div>
 </div>
 
 <div id="appDiv" class="hidden">
-
     <header class="main-header">
-        <h1>Gestor Clients FOC Centelles</h1>
-        <button class="btn-danger" onclick="logout()">
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M12.5 15a.5.5 0 0 1-.5-.5v-13a.5.5 0 0 1 1 0v13a.5.5 0 0 1-.5.5zM10 8a.5.5 0 0 1-.5.5H3.707l2.147 2.146a.5.5 0 0 1-.708.708l-3-3a.5.5 0 0 1 0-.708l3-3a.5.5 0 1 1 .708.708L3.707 7.5H9.5a.5.5 0 0 1 .5.5z"/></svg>
-            Tancar Sessió
-        </button>
+        <h1>Gestor Clients FOC</h1>
+        <button class="btn-danger" onclick="logout()">Tancar Sessió</button>
     </header>
 
     <div class="app-wrapper">
         <div class="container">
-
             <div class="card">
-                <div style="margin-bottom: 1.5rem;">
-                    <button class="btn-success" onclick="nouClient()">
-                        <svg width="20" height="20" viewBox="0 0 16 16" fill="currentColor"><path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4z"/></svg>
-                        Afegir Nou Client
+                <div style="display: flex; gap: 0.5rem; margin-bottom: 1.5rem;">
+                    <button class="btn-success" style="flex: 1;" onclick="nouClient()">+ Afegir Nou Client</button>
+                    <button class="btn-excel" title="Exportar llistat actual a Excel" onclick="exportarExcel()">
+                        Exportar Excel
                     </button>
                 </div>
-
-                <h3>Cercar i Filtrar</h3>
+                
+                <h3>Filtres</h3>
                 <div class="search-filters">
-                    <input id="filtreNom" placeholder="Cercar per nom del client...">
-                    <input id="filtreNum" placeholder="Número de client...">
-
+                    <input id="filtreNom" placeholder="Cercar per nom...">
+                    <input id="filtreNum" placeholder="Cercar per número...">
                     <select id="filtrePoble"></select>
                     <select id="filtreXarxa"></select>
-
-                    <select id="filtreVelocitat" style="grid-column: span 2;">
-                        <option value="">Totes les velocitats</option>
-                        <option>100/100 Mbps</option>
-                        <option>300/300 Mbps</option>
-                        <option>600/600 Mbps</option>
-                        <option>1000/1000 Mbps</option>
-                    </select>
                 </div>
-
-                <div class="form-label">Filtrar per serveis contractats:</div>
                 <div class="checkbox-group">
                     <label class="checkbox-label"><input type="checkbox" class="filtreContracte" value="Fibra">Fibra</label>
                     <label class="checkbox-label"><input type="checkbox" class="filtreContracte" value="IP">IP</label>
@@ -376,25 +252,20 @@
                     <label class="checkbox-label"><input type="checkbox" class="filtreContracte" value="Fix">Fix</label>
                     <label class="checkbox-label"><input type="checkbox" class="filtreContracte" value="Wimax">Wimax</label>
                 </div>
-
-                <div id="clientList">
-                    </div>
+                <div id="clientList"></div>
             </div>
 
             <div class="card" style="position: sticky; top: 80px;">
                 <h3 id="formTitle">Detalls del Client</h3>
-                
                 <div class="form-group">
                     <label class="form-label">Nom complet</label>
-                    <input id="nom" placeholder="Ex: Joan Garcia Perez">
+                    <input id="nom" placeholder="Nom del client">
                 </div>
-
                 <div class="form-group">
                     <label class="form-label">Número de Client</label>
                     <input id="numClient" placeholder="Ex: FOC001">
                 </div>
-
-                <div class="container" style="grid-template-columns: 1fr 1fr; gap: 1rem; margin: 0; padding: 0;">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
                     <div class="form-group">
                         <label class="form-label">Població</label>
                         <select id="poble"></select>
@@ -404,9 +275,8 @@
                         <select id="xarxaExterna"></select>
                     </div>
                 </div>
-
                 <div class="form-group">
-                    <label class="form-label">Velocitat Fibra</label>
+                    <label class="form-label">Velocitat</label>
                     <select id="velocitatFibra">
                         <option value="">No seleccionat</option>
                         <option>100/100 Mbps</option>
@@ -415,8 +285,6 @@
                         <option>1000/1000 Mbps</option>
                     </select>
                 </div>
-
-                <div class="form-label">Serveis Actius</div>
                 <div class="checkbox-group">
                     <label class="checkbox-label"><input type="checkbox" class="contracteOpcio" value="Fibra">Fibra</label>
                     <label class="checkbox-label"><input type="checkbox" class="contracteOpcio" value="IP">IP</label>
@@ -424,25 +292,16 @@
                     <label class="checkbox-label"><input type="checkbox" class="contracteOpcio" value="Fix">Fix</label>
                     <label class="checkbox-label"><input type="checkbox" class="contracteOpcio" value="Wimax">Wimax</label>
                 </div>
-
-                <div style="margin-top: 2rem; display: flex; gap: 1rem;">
-                    <button class="btn-primary" style="flex: 1;" onclick="guardarClient()">
-                        <svg width="18" height="18" viewBox="0 0 16 16" fill="currentColor"><path d="M11 2H9v3h2V2Z"/><path d="M1.5 0h11.586a1.5 1.5 0 0 1 1.06.44l1.415 1.414A1.5 1.5 0 0 1 16 2.914V14.5a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 0 14.5v-13A1.5 1.5 0 0 1 1.5 0ZM1 1.5v13a.5.5 0 0 0 .5.5H2v-4.5A1.5 1.5 0 0 1 3.5 9h9a1.5 1.5 0 0 1 1.5 1.5V15h.5a.5.5 0 0 0 .5-.5V2.914a.5.5 0 0 0-.146-.353l-1.415-1.415A.5.5 0 0 0 13.086 1H13v4.5A1.5 1.5 0 0 1 11.5 7h-7A1.5 1.5 0 0 1 3 5.5V1H1.5a.5.5 0 0 0-.5.5Zm3-.5v4.5a.5.5 0 0 0 .5.5h7a.5.5 0 0 0 .5-.5V1H4Zm9 14v-4.5a.5.5 0 0 0-.5-.5h-9a.5.5 0 0 0-.5.5V15h10Z"/></svg>
-                        Guardar Canvis
-                    </button>
-                </div>
+                <button class="btn-primary" style="width:100%; margin-top: 1rem;" onclick="guardarClient()">Guardar Canvis</button>
             </div>
-
         </div>
     </div>
-
 </div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
 import { getFirestore, collection, addDoc, onSnapshot, doc, deleteDoc, setDoc } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-firestore.js";
 
-// !!! RECORDA POSAR LA TEVA API KEY COMPLETA AQUÍ !!!
 const firebaseConfig = {
     apiKey: "AIzaSyBu...", 
     authDomain: "focentellesclients.firebaseapp.com",
@@ -451,36 +310,33 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
-
-// Contrasenya (Insegur, però és el mètode actual)
 const PASSWORD = "FOC6pu6A";
 
 let clients = [];
+let filtratsActuals = []; // Per exportar només el que es veu
 let indexActual = null;
 
-// Configuració
-const poblacions = ["Centelles","Tona","Vic","Granollers"];
-const xarxes = ["FOC","Adamo","Masmovil"];
+const poblacions = ["Centelles","Tona","Vic","Granollers","Taradell","Aiguafreda","Sant Martí de Centelles","La Garriga","Hostalets de Balenyà","Seva","Sant Hipòtil de Voltregà","Rubí","Santa Perpetua de Moguda","Santa Maria d'Oló","Avinyó","Sant Julià de Vilatorta","Folgueroles"];
+const xarxes = ["FOC","Adamo","Masmovil","Saranet","Ion Mobile","Emagina"];
 
-// LOGIN
 window.login = () => {
     const passInput = document.getElementById("password");
-    const errDiv = document.getElementById("loginError");
-    
     if(passInput.value === PASSWORD){
         document.getElementById("loginDiv").classList.add("hidden");
         document.getElementById("appDiv").classList.remove("hidden");
-        errDiv.classList.add("hidden");
         initSelects();
         initFilters();
         loadClients();
-    }else{
-        errDiv.innerText = "⚠️ Contrasenya incorrecta. Torna-ho a provar.";
-        errDiv.classList.remove("hidden");
-        passInput.value = "";
-        passInput.focus();
+    } else {
+        const err = document.getElementById("loginError");
+        err.innerText = "⚠️ Contrasenya incorrecta";
+        err.classList.remove("hidden");
     }
 };
+
+document.getElementById("password").addEventListener("keypress", (e) => {
+    if (e.key === "Enter") window.login();
+});
 
 window.logout = () => {
     document.getElementById("loginDiv").classList.remove("hidden");
@@ -488,179 +344,111 @@ window.logout = () => {
     document.getElementById("password").value = "";
 };
 
-// Inicialitzar Desplegables
 function initSelects(){
-    const p=document.getElementById("poble");
-    const fp=document.getElementById("filtrePoble");
-    const x=document.getElementById("xarxaExterna");
-    const fx=document.getElementById("filtreXarxa");
-
-    // Netejar i posar opcions per defecte
-    p.innerHTML = '<option value="">Selecciona poble...</option>';
+    const p=document.getElementById("poble"), fp=document.getElementById("filtrePoble");
+    const x=document.getElementById("xarxaExterna"), fx=document.getElementById("filtreXarxa");
+    p.innerHTML = '<option value="">Selecciona...</option>';
     fp.innerHTML = '<option value="">Tots els pobles</option>';
-    x.innerHTML = '<option value="">Selecciona xarxa...</option>';
+    x.innerHTML = '<option value="">Selecciona...</option>';
     fx.innerHTML = '<option value="">Totes les xarxes</option>';
-
-    poblacions.forEach(v=>{
-        p.innerHTML+=`<option>${v}</option>`;
-        fp.innerHTML+=`<option>${v}</option>`;
-    });
-    xarxes.forEach(v=>{
-        x.innerHTML+=`<option>${v}</option>`;
-        fx.innerHTML+=`<option>${v}</option>`;
-    });
+    poblacions.sort().forEach(v => { p.innerHTML+=`<option>${v}</option>`; fp.innerHTML+=`<option>${v}</option>`; });
+    xarxes.sort().forEach(v => { x.innerHTML+=`<option>${v}</option>`; fx.innerHTML+=`<option>${v}</option>`; });
 }
 
-// Inicialitzar Escoltadors de Filtres
 function initFilters(){
-    const inputs = [filtreNom,filtreNum,filtrePoble,filtreXarxa,filtreVelocitat];
-    inputs.forEach(el=>el.addEventListener("input",renderList));
-    
-    document.querySelectorAll(".filtreContracte").forEach(el=>el.addEventListener("change",renderList));
+    [filtreNom, filtreNum, filtrePoble, filtreXarxa].forEach(el => el.addEventListener("input", renderList));
+    document.querySelectorAll(".filtreContracte").forEach(el => el.addEventListener("change", renderList));
 }
 
-// Carregar dades en temps real
 function loadClients(){
-    onSnapshot(collection(db,"clients"), snap=>{
-        clients=[];
-        snap.forEach(d=>clients.push({id:d.id,...d.data()}));
+    onSnapshot(collection(db,"clients"), snap => {
+        clients = [];
+        snap.forEach(d => clients.push({id:d.id, ...d.data()}));
         renderList();
     });
 }
 
-// Pintar la llista (amb els filtres aplicats)
 function renderList(){
-    const nomF=filtreNom.value.toLowerCase();
-    const numF=filtreNum.value;
-    const pobleF=filtrePoble.value;
-    const xarxaF=filtreXarxa.value;
-    const velocitatF=filtreVelocitat.value;
+    const nomF=filtreNom.value.toLowerCase(), numF=filtreNum.value, pobleF=filtrePoble.value, xarxaF=filtreXarxa.value;
     const contractesF=[...document.querySelectorAll(".filtreContracte:checked")].map(c=>c.value);
 
-    let filtrats = clients.filter(c=>{
+    filtratsActuals = clients.filter(c => {
         if(nomF && !c.nom?.toLowerCase().includes(nomF)) return false;
         if(numF && !c.numClient?.includes(numF)) return false;
         if(pobleF && c.poble!==pobleF) return false;
         if(xarxaF && c.xarxaExterna!==xarxaF) return false;
-        if(velocitatF && c.velocitatFibra!==velocitatF) return false;
-        // Filtre de contractes: el client ha de tenir TOTS els serveis seleccionats al filtre
         if(contractesF.length>0 && !contractesF.every(v=>c.contracte?.includes(v))) return false;
         return true;
-    });
+    }).sort((a,b) => (a.nom > b.nom ? 1 : -1));
 
     const listDiv = document.getElementById("clientList");
-    listDiv.innerHTML="";
-    
-    if(filtrats.length === 0) {
-        listDiv.innerHTML = '<div style="text-align:center; padding:2rem; color:#64748b;">No s\'han trobat clients amb aquests filtres.</div>';
-        return;
-    }
-
-    filtrats.forEach(c=>{
-        const div=document.createElement("div");
-        div.className="client-item";
-        
-        // Crear badges per als contractes per visualitzar-ho millor
-        let badgesHtml = '';
-        if(c.contracte && c.contracte.length > 0) {
-            badgesHtml = '<div style="display:flex; gap:3px; margin-top:5px;">';
-            c.contracte.forEach(servei => {
-                badgesHtml += `<span class="badge" style="background:#f1f5f9; color:#475569; font-size:10px;">${servei}</span>`;
-            });
-            badgesHtml += '</div>';
-        }
-
-        div.innerHTML=`
-            <div>
-                <div class="client-info-main">${c.nom}</div>
-                <div class="client-info-sub">
-                    <span class="badge">${c.numClient || 'S/N'}</span> 
-                    📍 ${c.poble || 'No poble'}
-                </div>
-                ${badgesHtml}
-            </div>
-            <button class="btn-danger" title="Eliminar client" onclick="event.stopPropagation(); eliminarClient('${c.id}', '${c.nom}')">
-                🗑
-            </button>`;
-            
-        div.onclick=()=>carregarClient(c);
+    listDiv.innerHTML = "";
+    filtratsActuals.forEach(c => {
+        const div = document.createElement("div");
+        div.className = "client-item";
+        div.innerHTML = `<div><div class="client-info-main">${c.nom}</div><div class="client-info-sub"><span class="badge">${c.numClient || 'S/N'}</span> 📍 ${c.poble}</div></div><button class="btn-danger" onclick="event.stopPropagation(); eliminarClient('${c.id}', '${c.nom}')">🗑</button>`;
+        div.onclick = () => carregarClient(c);
         listDiv.appendChild(div);
     });
 }
 
-// Preparar formulari per nou client
+// FUNCIÓ EXCEL
+window.exportarExcel = () => {
+    if(filtratsActuals.length === 0) return alert("No hi ha dades per exportar.");
+    
+    // Preparem les dades netes per l'Excel
+    const dadesExcel = filtratsActuals.map(c => ({
+        "Nom": c.nom,
+        "Nº Client": c.numClient || "",
+        "Població": c.poble || "",
+        "Xarxa": c.xarxaExterna || "",
+        "Velocitat": c.velocitatFibra || "",
+        "Serveis": (c.contracte || []).join(", ")
+    }));
+
+    const worksheet = XLSX.utils.json_to_sheet(dadesExcel);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Clients");
+    
+    // Generar fitxer amb data actual
+    const dataRef = new Date().toISOString().slice(0,10);
+    XLSX.writeFile(workbook, `Llistat_Clients_FOC_${dataRef}.xlsx`);
+};
+
 window.nouClient=()=>{
     indexActual=null;
     document.getElementById("formTitle").innerText = "Nou Client";
-    document.getElementById("nom").value="";
-    document.getElementById("numClient").value="";
-    document.getElementById("poble").value="";
-    document.getElementById("xarxaExterna").value="";
-    document.getElementById("velocitatFibra").value="";
-    // CORRECCIÓ: Netejar checkboxes
+    ["nom","numClient","poble","xarxaExterna","velocitatFibra"].forEach(id => document.getElementById(id).value = "");
     document.querySelectorAll(".contracteOpcio").forEach(cb => cb.checked = false);
     document.getElementById("nom").focus();
 };
 
-// Guardar (Crear o Editar)
 window.guardarClient=async()=>{
-    const nomVal = document.getElementById("nom").value;
-    if(!nomVal) { alert("El nom és obligatori"); return; }
-
-    const contracte=[...document.querySelectorAll(".contracteOpcio:checked")].map(c=>c.value);
-
-    const c={
-        nom: nomVal,
-        numClient: document.getElementById("numClient").value,
-        poble: document.getElementById("poble").value,
-        xarxaExterna: document.getElementById("xarxaExterna").value,
-        velocitatFibra: document.getElementById("velocitatFibra").value,
-        contracte,
-        updatedAt: new Date() // Afegim data actualització
+    if(!nom.value) return alert("El nom és obligatori");
+    const c = {
+        nom: nom.value, numClient: numClient.value, poble: poble.value,
+        xarxaExterna: xarxaExterna.value, velocitatFibra: velocitatFibra.value,
+        contracte: [...document.querySelectorAll(".contracteOpcio:checked")].map(cb=>cb.value)
     };
-
     try {
-        if(indexActual==null){
-            await addDoc(collection(db,"clients"),c);
-        }else{
-            await setDoc(doc(db,"clients",indexActual),c);
-        }
-        nouClient(); // Neteja el formulari
-    } catch (e) {
-        console.error("Error guardant:", e);
-        alert("Error en guardar el client.");
-    }
+        if(indexActual==null) await addDoc(collection(db,"clients"),c);
+        else await setDoc(doc(db,"clients",indexActual),c);
+        nouClient();
+    } catch(e) { alert("Error al guardar"); }
 };
 
-// Carregar dades d'un client al formulari per editar
 window.carregarClient=c=>{
     indexActual=c.id;
     document.getElementById("formTitle").innerText = "Editant: " + c.nom;
-    document.getElementById("nom").value=c.nom || "";
-    document.getElementById("numClient").value=c.numClient || "";
-    document.getElementById("poble").value=c.poble || "";
-    document.getElementById("xarxaExterna").value=c.xarxaExterna || "";
-    document.getElementById("velocitatFibra").value=c.velocitatFibra || "";
-    
-    // CORRECCIÓ: Marcar checkboxes corresponents
-    const serveisClient = c.contracte || [];
-    document.querySelectorAll(".contracteOpcio").forEach(cb => {
-        cb.checked = serveisClient.includes(cb.value);
-    });
+    nom.value=c.nom; numClient.value=c.numClient; poble.value=c.poble;
+    xarxaExterna.value=c.xarxaExterna; velocitatFibra.value=c.velocitatFibra;
+    const serveis = c.contracte || [];
+    document.querySelectorAll(".contracteOpcio").forEach(cb => cb.checked = serveis.includes(cb.value));
 };
 
-// Eliminar client
 window.eliminarClient=async (id, nom)=>{
-    if(confirm(`Estàs segur que vols eliminar el client "${nom}"? Aquesta acció no es pot desfer.`)){
-        try {
-            await deleteDoc(doc(db,"clients",id));
-            if(indexActual === id) nouClient(); // Si estàvem editant aquest, netegem
-        } catch (e) {
-            alert("Error en eliminar.");
-        }
-    }
+    if(confirm(`Eliminar ${nom}?`)) await deleteDoc(doc(db,"clients",id));
 };
 </script>
-
 </body>
 </html>

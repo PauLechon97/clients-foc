@@ -8,23 +8,14 @@
     .container { max-width: 1000px; margin: auto; display: flex; gap: 20px; }
     .list, .form { background: white; padding: 15px; border-radius: 10px; flex: 1; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
     h2 { text-align: center; }
-    .client-item { padding: 8px; border-bottom: 1px solid #ddd; display: flex; justify-content: space-between; align-items: center; cursor: pointer;}
+    .client-item { padding: 8px; border-bottom: 1px solid #ddd; display: flex; justify-content: space-between; cursor: pointer;}
     .client-item:hover { background: #eee; }
     .field { margin: 10px 0; }
     input, select { width: 100%; padding: 6px; border-radius: 5px; border: 1px solid #ccc; }
     button { padding: 8px; border: none; border-radius: 5px; cursor: pointer; }
     .btn-delete { background: #dc3545; color: white; }
-    .btn-delete:hover { background: #a71d2a; }
-    .btn-save { background: #007BFF; color: white; width: 100%; margin-top: 10px; }
-    .btn-save:hover { background: #0056b3; }
+    .btn-save { background: #007BFF; color: white; width: 100%; }
     .btn-new { background: #28a745; color: white; width: 100%; margin-bottom: 10px; }
-    .btn-new:hover { background: #1e7e34; }
-    .btn-export { background: #17a2b8; color: white; width: 100%; margin-bottom: 10px; }
-    .btn-export:hover { background: #117a8b; }
-    .checkbox-group { display: flex; flex-wrap: wrap; gap: 10px; }
-    .checkbox-group label { display: flex; align-items: center; gap: 5px; }
-    .field select[multiple] { height: 100px; }
-    #pagination button { cursor: pointer; }
   </style>
 </head>
 <body>
@@ -33,271 +24,101 @@
 
 <div class="container">
 
-  <!-- Llista de clients i filtre -->
   <div class="list">
     <button class="btn-new" onclick="nouClient()">+ Nou Client</button>
-    <button class="btn-export" onclick="exportExcel()">Exportar llistat</button>
-
-    <div class="field"><input id="filtreNom" placeholder="Filtrar per nom" oninput="paginaActual=1; renderList()"></div>
-    <div class="field"><input id="filtreNum" placeholder="Filtrar per Nº de client" oninput="paginaActual=1; renderList()"></div>
-
-    <div class="field">
-      <select id="filtrePoble" onchange="paginaActual=1; renderList()"></select>
-    </div>
-
-    <div class="field">
-      <select id="filtreXarxa" onchange="paginaActual=1; renderList()"></select>
-    </div>
-
-    <div class="field">
-      <select id="filtreVelocitat" onchange="paginaActual=1; renderList()">
-        <option value="">Totes les velocitats</option>
-        <option>100/100 Mbps</option>
-        <option>300/300 Mbps</option>
-        <option>600/600 Mbps</option>
-        <option>1000/1000 Mbps</option>
-      </select>
-    </div>
-
-    <div class="field">
-      <strong>Filtrar per tipus de contracte:</strong>
-      <div class="checkbox-group">
-        <label><input type="checkbox" class="filtreContracte" value="Fibra" onchange="paginaActual=1; renderList()"> Fibra</label>
-        <label><input type="checkbox" class="filtreContracte" value="IP" onchange="paginaActual=1; renderList()"> IP</label>
-        <label><input type="checkbox" class="filtreContracte" value="Mòbil" onchange="paginaActual=1; renderList()"> Mòbil</label>
-        <label><input type="checkbox" class="filtreContracte" value="Fix" onchange="paginaActual=1; renderList()"> Fix</label>
-        <label><input type="checkbox" class="filtreContracte" value="Wimax" onchange="paginaActual=1; renderList()"> Wimax</label>
-      </div>
-    </div>
-
-    <div id="clientCount" style="margin-bottom:10px; font-weight:bold;"></div>
     <div id="clientList"></div>
-    <div id="pagination" style="text-align:center; margin-top:10px;"></div>
   </div>
 
-  <!-- Formulari de client -->
   <div class="form">
-    <div class="field"><input id="nom" placeholder="Nom i Cognoms"></div>
-    <div class="field"><input id="numClient" placeholder="Nº de client"></div>
-
-    <div class="field">
-      <select id="poble"></select>
-    </div>
-
-    <div class="field">
-      <select id="xarxaExterna"></select>
-    </div>
-
-    <div class="field">
-      <select id="velocitatFibra">
-        <option value="">Selecciona velocitat</option>
-        <option>100/100 Mbps</option>
-        <option>300/300 Mbps</option>
-        <option>600/600 Mbps</option>
-        <option>1000/1000 Mbps</option>
-      </select>
-    </div>
-
-    <div class="field">
-      <strong>Tipus de contracte:</strong>
-      <div class="checkbox-group">
-        <label><input type="checkbox" class="contracteOpcio" value="Fibra"> Fibra</label>
-        <label><input type="checkbox" class="contracteOpcio" value="IP"> IP</label>
-        <label><input type="checkbox" class="contracteOpcio" value="Mòbil"> Mòbil</label>
-        <label><input type="checkbox" class="contracteOpcio" value="Fix"> Fix</label>
-        <label><input type="checkbox" class="contracteOpcio" value="Wimax"> Wimax</label>
-      </div>
-    </div>
-
-    <button class="btn-save" onclick="guardarClient()">Guardar Client</button>
+    <div class="field"><input id="nom" placeholder="Nom"></div>
+    <div class="field"><input id="numClient" placeholder="Nº client"></div>
+    <div class="field"><input id="poble" placeholder="Poble"></div>
+    <button class="btn-save" onclick="guardarClient()">Guardar</button>
   </div>
 
 </div>
 
-<script>
-let clients = JSON.parse(localStorage.getItem("clients")) || [];
-let indexActual = null;
-let clientsPerPagina = 10;
-let paginaActual = 1;
+<!-- 🔥 FIREBASE -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
+  import { getFirestore, collection, addDoc, onSnapshot, doc, deleteDoc, setDoc } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-firestore.js";
 
-const poblacions = [
-  "Centelles","Sant Martí de Centelles","Hostalets de Balenyà","Aiguafreda",
-  "La Garriga","Tona","Granollers","Vic","Seva","Sant Hipòlit de Voltregà",
-  "Rubí","Santa Perpetua de Moguda","Avinyó","Santa Maria d'Oló",
-  "Folgueroles","Sant Julià de Vilatorta","Sant Miquel de Balenyà","Taradell",
-];
-
-const xarxes = ["FOC","Emagina","Saranet","Adamo","Masmovil","Ion Mobile"];
-
-function renderSelects() {
-  const pobleSelect = document.getElementById("poble");
-  const filtrePoble = document.getElementById("filtrePoble");
-  const xarxaSelect = document.getElementById("xarxaExterna");
-  const filtreXarxa = document.getElementById("filtreXarxa");
-
-  pobleSelect.innerHTML = '<option value="">Selecciona poble</option>';
-  filtrePoble.innerHTML = '<option value="">-- Tots els pobles --</option>';
-  xarxaSelect.innerHTML = '<option value="">Selecciona Xarxa</option>';
-  filtreXarxa.innerHTML = '<option value="">-- Totes --</option>';
-
-  poblacions.forEach(p => {
-    pobleSelect.innerHTML += `<option>${p}</option>`;
-    filtrePoble.innerHTML += `<option>${p}</option>`;
-  });
-
-  xarxes.forEach(x => {
-    xarxaSelect.innerHTML += `<option>${x}</option>`;
-    filtreXarxa.innerHTML += `<option>${x}</option>`;
-  });
-}
-
-function renderList(){
-  const list=document.getElementById("clientList");
-  const filtreNom=document.getElementById("filtreNom").value.toLowerCase();
-  const filtreNum=document.getElementById("filtreNum").value;
-  const filtrePoble=document.getElementById("filtrePoble").value;
-  const filtreXarxa=document.getElementById("filtreXarxa").value;
-  const filtreVelocitat=document.getElementById("filtreVelocitat").value;
-  const filtreContracte=Array.from(document.querySelectorAll(".filtreContracte:checked")).map(c=>c.value);
-  list.innerHTML="";
-
-  const filteredClients = clients.filter(c=>{
-    if(filtreNom && !c.nom.toLowerCase().includes(filtreNom)) return false;
-    if(filtreNum && !c.numClient.includes(filtreNum)) return false;
-    if(filtrePoble && c.poble!==filtrePoble) return false;
-    if(filtreXarxa && c.xarxaExterna!==filtreXarxa) return false;
-    if(filtreVelocitat && c.velocitatFibra!==filtreVelocitat) return false;
-    if(filtreContracte.length>0){
-      const sC=[...c.contracte].sort(), sF=[...filtreContracte].sort();
-      return JSON.stringify(sC)===JSON.stringify(sF);
-    }
-    return true;
-  });
-
-  const totalPagines = Math.ceil(filteredClients.length / clientsPerPagina);
-  if(paginaActual > totalPagines) paginaActual = totalPagines || 1;
-
-  const inici = (paginaActual-1) * clientsPerPagina;
-  const fi = inici + clientsPerPagina;
-  const clientsPagina = filteredClients.slice(inici, fi);
-
-  document.getElementById("clientCount").innerText=`Clients trobats: ${filteredClients.length}`;
-
-  clientsPagina.forEach((c,i)=>{
-    const div=document.createElement("div");
-    div.className="client-item";
-    const indexGlobal = inici + i;
-    div.innerHTML=`<span>${c.nom||"Sense nom"} (${c.poble||"-"}) - ${c.contracte.join(", ")} - Xarxa: ${c.xarxaExterna||"-"} - ${c.velocitatFibra||""}</span>
-    <button class="btn-delete" onclick="eliminarClient(${indexGlobal})">🗑</button>`;
-    div.onclick=()=>carregarClient(indexGlobal);
-    list.appendChild(div);
-  });
-
-  renderPagination(totalPagines);
-}
-
-function renderPagination(totalPagines){
-  const container = document.getElementById("pagination");
-  container.innerHTML = "";
-  if(totalPagines <= 1) return;
-
-  for(let i=1; i<=totalPagines; i++){
-    const btn = document.createElement("button");
-    btn.textContent = i;
-    btn.style.margin = "0 3px";
-    btn.style.padding = "3px 8px";
-    btn.style.border = "1px solid #ccc";
-    btn.style.borderRadius = "3px";
-    if(i === paginaActual) btn.style.backgroundColor = "#007BFF", btn.style.color = "#fff";
-    btn.onclick = () => { paginaActual = i; renderList(); };
-    container.appendChild(btn);
-  }
-}
-
-function nouClient(){
-  indexActual=null;
-  document.getElementById("nom").value="";
-  document.getElementById("numClient").value="";
-  document.getElementById("poble").value="";
-  document.getElementById("xarxaExterna").value="";
-  document.getElementById("velocitatFibra").value="";
-  document.querySelectorAll(".contracteOpcio").forEach(c=>c.checked=false);
-}
-
-function guardarClient(){
-  const contracte=Array.from(document.querySelectorAll(".contracteOpcio:checked")).map(c=>c.value);
-  const client={
-    nom:document.getElementById("nom").value,
-    numClient:document.getElementById("numClient").value,
-    poble:document.getElementById("poble").value,
-    xarxaExterna:document.getElementById("xarxaExterna").value,
-    velocitatFibra:document.getElementById("velocitatFibra").value,
-    contracte:contracte
+  const firebaseConfig = {
+    apiKey: "AIzaSyBuIZdfoUuTekmRLifaS8K4cR_QJKaHLCw",
+    authDomain: "focentellesclients.firebaseapp.com",
+    projectId: "focentellesclients",
+    storageBucket: "focentellesclients.firebasestorage.app",
+    messagingSenderId: "754969193561",
+    appId: "1:754969193561:web:6f66c5ff9e5cd824a89548"
   };
-  if(indexActual===null){ clients.push(client); }else{ clients[indexActual]=client; }
-  localStorage.setItem("clients",JSON.stringify(clients));
-  renderList();
-  alert("Client guardat!");
-}
 
-function carregarClient(i){
-  const c=clients[i]; indexActual=i;
-  document.getElementById("nom").value=c.nom;
-  document.getElementById("numClient").value=c.numClient;
-  document.getElementById("poble").value=c.poble;
-  document.getElementById("xarxaExterna").value=c.xarxaExterna||"";
-  document.getElementById("velocitatFibra").value=c.velocitatFibra||"";
-  document.querySelectorAll(".contracteOpcio").forEach(ch=>ch.checked=c.contracte.includes(ch.value));
-}
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
 
-function eliminarClient(i){
-  if(confirm("Segur que vols eliminar aquest client?")){
-    clients.splice(i,1);
-    localStorage.setItem("clients",JSON.stringify(clients));
+  let clients = [];
+  let indexActual = null;
+
+  // 🔄 Temps real
+  onSnapshot(collection(db, "clients"), (snapshot) => {
+    clients = [];
+    snapshot.forEach((d) => {
+      clients.push({ id: d.id, ...d.data() });
+    });
     renderList();
+  });
+
+  function renderList(){
+    const list = document.getElementById("clientList");
+    list.innerHTML = "";
+
+    clients.forEach((c,i)=>{
+      const div = document.createElement("div");
+      div.className="client-item";
+      div.innerHTML = `
+        <span>${c.nom} (${c.poble})</span>
+        <button onclick="eliminarClient(${i})">🗑</button>
+      `;
+      div.onclick = ()=>carregarClient(i);
+      list.appendChild(div);
+    });
+  }
+
+  window.nouClient = function(){
+    indexActual=null;
+    nom.value="";
+    numClient.value="";
+    poble.value="";
+  }
+
+  window.guardarClient = async function(){
+    const client = {
+      nom: nom.value,
+      numClient: numClient.value,
+      poble: poble.value
+    };
+
+    if(indexActual === null){
+      await addDoc(collection(db, "clients"), client);
+    } else {
+      await setDoc(doc(db, "clients", clients[indexActual].id), client);
+    }
+
     nouClient();
   }
-}
 
-// Exportar a Excel
-function exportExcel(){
-  const filtreNom=document.getElementById("filtreNom").value.toLowerCase();
-  const filtreNum=document.getElementById("filtreNum").value;
-  const filtrePoble=document.getElementById("filtrePoble").value;
-  const filtreXarxa=document.getElementById("filtreXarxa").value;
-  const filtreVelocitat=document.getElementById("filtreVelocitat").value;
-  const filtreContracte=Array.from(document.querySelectorAll(".filtreContracte:checked")).map(c=>c.value);
+  window.carregarClient = function(i){
+    const c = clients[i];
+    indexActual = i;
+    nom.value = c.nom;
+    numClient.value = c.numClient;
+    poble.value = c.poble;
+  }
 
-  const filteredClients = clients.filter(c=>{
-    if(filtreNom && !c.nom.toLowerCase().includes(filtreNom)) return false;
-    if(filtreNum && !c.numClient.includes(filtreNum)) return false;
-    if(filtrePoble && c.poble!==filtrePoble) return false;
-    if(filtreXarxa && c.xarxaExterna!==filtreXarxa) return false;
-    if(filtreVelocitat && c.velocitatFibra!==filtreVelocitat) return false;
-    if(filtreContracte.length>0){
-      const sC=[...c.contracte].sort(), sF=[...filtreContracte].sort();
-      return JSON.stringify(sC)===JSON.stringify(sF);
+  window.eliminarClient = async function(i){
+    if(confirm("Eliminar client?")){
+      await deleteDoc(doc(db, "clients", clients[i].id));
     }
-    return true;
-  });
-
-  let csvContent = "data:text/csv;charset=utf-8,Nom,NumClient,Poble,Xarxa,Velocitat,Contracte\n";
-  filteredClients.forEach(c => {
-    csvContent += `${c.nom},${c.numClient},${c.poble},${c.xarxaExterna},${c.velocitatFibra},"${c.contracte.join(";")}"\n`;
-  });
-
-  const encodedUri = encodeURI(csvContent);
-  const link = document.createElement("a");
-  link.setAttribute("href", encodedUri);
-  link.setAttribute("download", "clients_export.csv");
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
-}
-
-// INIT
-renderSelects();
-renderList();
+  }
 </script>
 
 </body>
